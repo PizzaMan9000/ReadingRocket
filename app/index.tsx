@@ -3,12 +3,11 @@ import { Link } from 'expo-router';
 import React from 'react';
 import { Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { View, Text, useTheme, Input, Button, Checkbox, Image, Spinner } from 'tamagui';
+import { View, Text, useTheme, Input, Button, Checkbox, Spinner } from 'tamagui';
 
 import { AppleAuth } from '@/components/auth/appleAuth';
+import { supabase } from '@/services/supabase';
 import useLoginStore from '@/store/loginStore';
-import { AuthButton } from '@/tamagui.config';
-import { supabase } from '@/utils/supabase';
 
 const Page = () => {
   const { email, setEmail } = useLoginStore();
@@ -83,6 +82,7 @@ const Page = () => {
             letterSpacing={0.5}
             lineHeight={16}
             p={0}
+            keyboardType="email-address"
             borderWidth={0}
             ml={18}
             value={email}
@@ -122,6 +122,7 @@ const Page = () => {
             p={0}
             borderWidth={0}
             ml={18}
+            secureTextEntry={passwordIcon}
             value={password}
             onChangeText={setPassword}
             w="100%"
@@ -195,30 +196,6 @@ const Page = () => {
           Login with
         </Text>
         <View flexDirection="row" mt={28}>
-          <AuthButton mr={5}>
-            <Image
-              source={{
-                uri: 'https://live.staticflickr.com/65535/53743058662_c3bc8ed7c7.jpg',
-                width: 20,
-                height: 20,
-              }}
-            />
-            <Text color="#9D9D9D" fontSize={12} lineHeight={16} fontWeight={400}>
-              Google
-            </Text>
-          </AuthButton>
-          {/* <AuthButton ml={5}>
-            <Image
-              source={{
-                uri: 'https://live.staticflickr.com/65535/53747715376_37f433754d_m.jpg',
-                width: 19,
-                height: 24,
-              }}
-            />
-            <Text color="#9D9D9D" fontSize={12} lineHeight={16} fontWeight={400}>
-              Apple
-            </Text>
-          </AuthButton> */}
           <AppleAuth />
         </View>
       </View>

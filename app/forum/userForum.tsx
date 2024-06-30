@@ -1,11 +1,12 @@
 import { Entypo, FontAwesome, FontAwesome6 } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { ImageBackground } from 'react-native';
 import { View, Input, RadioGroup, YStack, Text, useTheme } from 'tamagui';
 
 import ToggleGroupText from '@/components/forum/ToggleGroupText';
 import { RadioGroupItemWithLabel } from '@/components/forum/radioGroupLabel';
+import { supabase } from '@/services/supabase';
 import useUserForumStore from '@/store/userForumStore';
 import {
   UserForumProffessionSelected,
@@ -14,7 +15,6 @@ import {
   UserForumText,
   UserForumReadingSelected,
 } from '@/tamagui.config';
-import { supabase } from '@/utils/supabase';
 
 const Page = () => {
   const { name, setName } = useUserForumStore();
@@ -55,8 +55,9 @@ const Page = () => {
   };
 
   return (
-    <ImageBackground
-      source={{ uri: 'https://live.staticflickr.com/65535/53775957531_62822fa99b_k.jpg' }}
+    <LinearGradient
+      colors={['#6247AA', '#A06CD5']}
+      end={{ x: 0.9, y: 0.7 }}
       style={{
         width: '100%',
         height: '100%',
@@ -228,7 +229,7 @@ const Page = () => {
         </Text>
         <FontAwesome name="arrow-right" size={24} color="#FFFFFF" />
       </View>
-    </ImageBackground>
+    </LinearGradient>
   );
 };
 

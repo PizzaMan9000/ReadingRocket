@@ -1,7 +1,7 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { Platform } from 'react-native';
 
-import { supabase } from '@/utils/supabase';
+import { supabase } from '@/services/supabase';
 
 export function AppleAuth() {
   if (Platform.OS === 'ios')

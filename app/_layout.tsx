@@ -5,7 +5,9 @@ import { useEffect, useState } from 'react';
 import { TamaguiProvider, Theme } from 'tamagui';
 
 import config from '@/tamagui.config';
-import { supabase } from '@/utils/supabase';
+import { supabase } from '@/services/supabase';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '@/services/queryClient';
 
 const InitalLayout = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -37,6 +39,7 @@ const InitalLayout = () => {
       return;
     }
     console.log(data);
+    console.log(User?.id)
 
     if (data && User) {
       for (const row of data) {
@@ -56,11 +59,13 @@ const InitalLayout = () => {
 
     const inAuthGroup = segments[0] === '(auth)';
 
-    if (session && !inAuthGroup) {
-      checkTransferForums();
-    } else if (!session) {
-      router.replace('/');
-    }
+    // if (session && !inAuthGroup) {
+    //   router.replace('/loadingScreen');
+    //   checkTransferForums();
+    // } else if (!session) {
+    //   router.replace('/');
+    // }
+    router.replace('/forum/selectBooks/');
   }, [initialized, session]);
 
   useEffect(() => {
@@ -76,9 +81,11 @@ const InitalLayout = () => {
 
   return (
     <TamaguiProvider config={config}>
-      <Theme name="erudito">
-        <Slot />
-      </Theme>
+      <QueryClientProvider client={queryClient}>
+        <Theme name="erudito">
+          <Slot />
+        </Theme>
+      </QueryClientProvider>
     </TamaguiProvider>
   );
 };

@@ -7,7 +7,7 @@ import { View, Text, useTheme, Input, Button, Checkbox, Image, Spinner } from 't
 
 import useLoginStore from '@/store/loginStore';
 import { AuthButton } from '@/tamagui.config';
-import { supabase } from '@/utils/supabase';
+import { supabase } from '@/services/supabase';
 
 const Page = () => {
   const { email, setEmail } = useLoginStore();
