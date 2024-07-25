@@ -3,39 +3,49 @@
     "name": "ReadingRocket",
     "slug": "ReadingRocket",
     "version": "1.0.0",
-
     "scheme": "ReadingRocket",
     "web": {
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-router", "expo-apple-authentication", "@react-native-google-signin/google-signin"],
+    "plugins": [
+      "expo-router",
+      "expo-apple-authentication",
+      "@react-native-google-signin/google-signin"
+    ],
     "experiments": {
       "typedRoutes": true,
-
       "tsconfigPaths": true
     },
-
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-
     "userInterfaceStyle": "light",
-
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
-      "usesAppleSignIn": true
+      "usesAppleSignIn": true,
+      "bundleIdentifier": "com.adi23546.ReadingRocket"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
+      }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "bfe6d03b-7ff4-4e11-9e05-48ef0e3a6ab2"
       }
     }
   }

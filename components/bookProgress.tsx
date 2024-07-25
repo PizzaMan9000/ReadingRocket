@@ -118,16 +118,20 @@ const BookProgress = ({ book, setBooks, dailyPages, setDailyPages }: BookProgres
     getPageInfo();
   }, []);
 
+  useEffect(() => {
+    console.log(book.volumeInfo.imageLinks);
+  }, [book.volumeInfo.imageLinks]);
+
   return (
     <View flexDirection="row" marginVertical={20}>
       {book.volumeInfo.imageLinks ? (
         <Image
           source={{
-            uri: book.volumeInfo.imageLinks?.smallThumbnail,
+            uri: book.volumeInfo.imageLinks.smallThumbnail,
             width: 65,
             height: 90,
           }}
-          style={{ borderRadius: 5 }}
+          style={{ borderRadius: 5, width: 65, height: 90 }}
         />
       ) : (
         <View

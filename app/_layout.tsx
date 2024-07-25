@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Sentry from '@sentry/react-native';
 import { Session } from '@supabase/supabase-js';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
@@ -10,11 +9,6 @@ import { TamaguiProvider, Theme } from 'tamagui';
 import { queryClient } from '@/services/queryClient';
 import { supabase } from '@/services/supabase';
 import config from '@/tamagui.config';
-
-Sentry.init({
-  dsn: 'https://c993385f6aa3496b99e475b8b1e07530@o4507616346308608.ingest.us.sentry.io/4507616365051904',
-  debug: true,
-});
 
 const InitalLayout = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -91,6 +85,7 @@ const InitalLayout = () => {
           if (row['user_id'] === User?.id) {
             router.replace('/(auth)/');
             console.log('Transferring to home');
+            break;
           } else {
             router.replace('/forum/userForum');
             console.log('Transferring to the forums');
@@ -109,6 +104,7 @@ const InitalLayout = () => {
 
     if (session && !inAuthGroup) {
       router.replace('/loadingScreen');
+      console.log('here');
       checkTransferForums();
     } else if (!session) {
       router.replace('/');
@@ -139,4 +135,4 @@ const InitalLayout = () => {
   );
 };
 
-export default Sentry.wrap(InitalLayout);
+export default InitalLayout;

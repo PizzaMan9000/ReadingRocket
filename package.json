@@ -49,7 +49,8 @@
     "zustand": "^4.5.2",
     "expo-task-manager": "~11.8.2",
     "expo-background-fetch": "~12.0.1",
-    "@sentry/react-native": "~5.22.0"
+    "@sentry/react-native": "~5.22.0",
+    "expo-dev-client": "~4.0.20"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
