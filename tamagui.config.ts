@@ -3,7 +3,7 @@ import { createInterFont } from '@tamagui/font-inter';
 import { createMedia } from '@tamagui/react-native-media-driver';
 import { shorthands } from '@tamagui/shorthands';
 import { themes, tokens } from '@tamagui/themes';
-import { createTamagui, styled, SizableText, H1, YStack, Button as ButtonTamagui } from 'tamagui';
+import { createTamagui, styled, Button, View, Text } from 'tamagui';
 
 const animations = createAnimations({
   bouncy: {
@@ -29,51 +29,87 @@ const headingFont = createInterFont();
 
 const bodyFont = createInterFont();
 
-export const Container = styled(YStack, {
-  flex: 1,
-  padding: 24,
+const EruditoThemeConfig = {
+  primaryColor: '#6247AA',
+  secondaryColorOne: '#A06CD5',
+  secondaryColorTwo: '#062726',
+  complementaryColor: '#E2CFEA',
+  complementaryColorTwo: '#F9F8FC',
+};
+
+export const AuthButton = styled(Button, {
+  backgroundColor: '#FFFFFF',
+  shadowColor: 'rgba(0, 0, 0, 0.08)',
+  shadowOffset: { width: 0, height: 0 },
+  borderRadius: 5,
+  shadowRadius: 15,
+  width: '50%',
+  height: 50,
 });
 
-export const Main = styled(YStack, {
-  flex: 1,
-  justifyContent: 'space-between',
-  maxWidth: 960,
+export const ForumContainer = styled(View, {
+  marginHorizontal: 20,
+  alignSelf: 'center',
+  backgroundColor: '#FFFFFF',
+  borderRadius: 10,
 });
 
-export const Title = styled(H1, {
-  color: '#000',
-  size: '$12',
+export const UserForumText = styled(Text, {
+  color: '#1F0318',
+  fontSize: 12,
+  fontWeight: 500,
+  lineHeight: 16,
 });
 
-export const Subtitle = styled(SizableText, {
-  color: '#38434D',
-  size: '$9',
-});
-
-export const Button = styled(ButtonTamagui, {
-  backgroundColor: '#6366F1',
-  borderRadius: 28,
-  hoverStyle: {
-    backgroundColor: '#5a5fcf',
-  },
-  pressStyle: {
-    backgroundColor: '#5a5fcf',
-  },
-  maxWidth: 500,
-
-  // Shaddows
-  shadowColor: '#000',
-  shadowOffset: {
-    height: 2,
-    width: 0,
-  },
-  shadowOpacity: 0.25,
-  shadowRadius: 3.84,
-
-  // Button text
+export const ForumHeaders = styled(Text, {
+  fontWeight: 500,
   color: '#FFFFFF',
-  fontWeight: '600', // Is not passed down to the text. Probably a bug in Tamagui: https://github.com/tamagui/tamagui/issues/1156#issuecomment-1802594930
-  fontSize: 16,
+  lineHeight: 16,
+  textAlign: 'center',
+  fontSize: 25,
+});
+
+export const UserForumProffessionUnselected = styled(View, {
+  height: 40,
+  borderRadius: 5,
+  backgroundColor: '#FFFFFF',
+  borderWidth: 0.5,
+  borderColor: '#D9D9D9',
+  width: '50%',
+  alignItems: 'center',
+  justifyContent: 'center',
+});
+
+export const UserForumProffessionSelected = styled(View, {
+  height: 40,
+  borderRadius: 5,
+  backgroundColor: '#F9F8FC',
+  borderWidth: 2,
+  borderColor: EruditoThemeConfig.primaryColor,
+  width: '50%',
+  alignItems: 'center',
+  justifyContent: 'center',
+});
+
+export const UserForumReadingUnselected = styled(View, {
+  width: '33%',
+  height: 120,
+  borderRadius: 5,
+  borderWidth: 0.5,
+  borderColor: '#D9D9D9',
+  alignItems: 'center',
+  justifyContent: 'center',
+});
+
+export const UserForumReadingSelected = styled(View, {
+  width: '33%',
+  height: 120,
+  borderRadius: 5,
+  borderWidth: 2,
+  borderColor: EruditoThemeConfig.primaryColor,
+  alignItems: 'center',
+  justifyContent: 'center',
+  backgroundColor: '#F9F8FC',
 });
 
 const config = createTamagui({
@@ -92,7 +128,7 @@ const config = createTamagui({
     body: bodyFont,
     heading: headingFont,
   },
-  themes,
+  themes: { ...themes, erudito: EruditoThemeConfig },
   tokens,
   media: createMedia({
     xs: { maxWidth: 660 },
