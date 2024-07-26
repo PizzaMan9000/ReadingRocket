@@ -5,7 +5,7 @@ import { Image } from 'react-native';
 import { View, Text, useTheme, Progress, Button, Input } from 'tamagui';
 
 import { IDBook } from '@/interfaces/api/bookidApiResult';
-import { supabase } from '@/services/supabase';
+import { supabase } from '@/services/clients/supabase';
 
 interface BookProgressProps {
   book: IDBook;

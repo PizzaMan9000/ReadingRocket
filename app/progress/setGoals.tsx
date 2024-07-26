@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Input, Button, useTheme } from 'tamagui';
 
 import BackButton from '@/components/backButton';
-import { supabase } from '@/services/supabase';
+import { supabase } from '@/services/clients/supabase';
 
 const Page = () => {
   const [amountOfPages, setAmountOfPages] = useState(10);

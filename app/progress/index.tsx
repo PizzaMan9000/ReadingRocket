@@ -9,7 +9,7 @@ import BookProgress from '@/components/bookProgress';
 import Header from '@/components/header';
 import PageDisplay from '@/components/pageDisplay';
 import { IDBook } from '@/interfaces/api/bookidApiResult';
-import { supabase } from '@/services/supabase';
+import { supabase } from '@/services/clients/supabase';
 
 const Page = () => {
   const [books, setBooks] = useState<IDBook[]>();

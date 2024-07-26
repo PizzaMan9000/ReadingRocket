@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Text, Progress, useTheme } from 'tamagui';
 
 import { pageAndID } from '@/interfaces/app/forumInterface';
-import { supabase } from '@/services/supabase';
+import { supabase } from '@/services/clients/supabase';
 
 const Page = () => {
   const [progress, setProgress] = useState(0);

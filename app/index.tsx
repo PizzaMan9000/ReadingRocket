@@ -7,7 +7,7 @@ import { View, Text, useTheme, Input, Button, Checkbox, Spinner } from 'tamagui'
 
 import { AppleAuth } from '@/components/auth/appleAuth';
 import GoogleAuth from '@/components/auth/googleAuth';
-import { supabase } from '@/services/supabase';
+import { supabase } from '@/services/clients/supabase';
 import useLoginStore from '@/store/loginStore';
 
 const Page = () => {

@@ -4,7 +4,7 @@ import React, { memo, useEffect, useState } from 'react';
 import { Image } from 'react-native';
 import { View, Text, useTheme, Progress } from 'tamagui';
 
-import { supabase } from '@/services/supabase';
+import { supabase } from '@/services/clients/supabase';
 
 const PageDisplay = () => {
   const [readingGoals, setReadingGoals] = useState<string>();

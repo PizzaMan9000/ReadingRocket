@@ -11,7 +11,7 @@ import BookCard from '@/components/forum/BookCard';
 import SelectedCard from '@/components/forum/SelectedCard';
 import { Item } from '@/interfaces/api/bookApiResults';
 import { dataSaved } from '@/interfaces/app/forumInterface';
-import { getSearchResults } from '@/services/bookApi';
+import { getSearchResults } from '@/services/api/bookApi';
 import useSelectBooksState from '@/store/selectBooksStore';
 import { ForumHeaders } from '@/tamagui.config';
 import useDebounce from '@/utils/useDebounce';

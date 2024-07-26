@@ -10,9 +10,9 @@ import PageDisplay from '@/components/pageDisplay';
 import { IDBook } from '@/interfaces/api/bookidApiResult';
 import { SearchedImage } from '@/interfaces/api/imageApiResults';
 import { UserForum } from '@/interfaces/app/homeInterface';
-import { getIDSearchResults } from '@/services/bookApi';
-import { getImageSearchResults } from '@/services/imageApi';
-import { supabase } from '@/services/supabase';
+import { getIDSearchResults } from '@/services/api/bookApi';
+import { getImageSearchResults } from '@/services/api/imageApi';
+import { supabase } from '@/services/clients/supabase';
 
 const Page = () => {
   // Set zustand states

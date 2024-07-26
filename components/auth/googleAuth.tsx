@@ -4,7 +4,7 @@ import {
   statusCodes,
 } from '@react-native-google-signin/google-signin';
 
-import { supabase } from '@/services/supabase';
+import { supabase } from '@/services/clients/supabase';
 
 export default function () {
   GoogleSignin.configure({

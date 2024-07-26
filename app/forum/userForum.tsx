@@ -7,7 +7,7 @@ import { View, Input, RadioGroup, YStack, Text, useTheme } from 'tamagui';
 
 import ToggleGroupText from '@/components/forum/ToggleGroupText';
 import { RadioGroupItemWithLabel } from '@/components/forum/radioGroupLabel';
-import { supabase } from '@/services/supabase';
+import { supabase } from '@/services/clients/supabase';
 import useUserForumStore from '@/store/userForumStore';
 import {
   UserForumProffessionSelected,

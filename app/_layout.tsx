@@ -6,8 +6,8 @@ import { Slot, SplashScreen, useRouter, useSegments } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { TamaguiProvider, Theme } from 'tamagui';
 
-import { queryClient } from '@/services/queryClient';
-import { supabase } from '@/services/supabase';
+import { queryClient } from '@/services/clients/queryClient';
+import { supabase } from '@/services/clients/supabase';
 import config from '@/tamagui.config';
 
 const InitalLayout = () => {

@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { View, Button } from 'tamagui';
 
-import { supabase } from '@/services/supabase';
+import { supabase } from '@/services/clients/supabase';
 
 const Page = () => {
   const router = useRouter();
