@@ -8,10 +8,9 @@ const Page = () => {
   const router = useRouter();
 
   const logout = async () => {
-    // console.log('logging out...')
-    // supabase.auth.signOut()
-    // console.log('logged out')
-    router.replace('/');
+    console.log('logging out...');
+    supabase.auth.signOut();
+    console.log('logged out');
   };
 
   return (

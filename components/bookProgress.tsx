@@ -119,8 +119,8 @@ const BookProgress = ({ book, setBooks, dailyPages, setDailyPages }: BookProgres
   }, []);
 
   useEffect(() => {
-    console.log(book.volumeInfo.imageLinks);
-  }, [book.volumeInfo.imageLinks]);
+    console.log(book.volumeInfo.imageLinks.smallThumbnail);
+  }, [book.volumeInfo.imageLinks.smallThumbnail]);
 
   return (
     <View flexDirection="row" marginVertical={20}>

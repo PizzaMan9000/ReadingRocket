@@ -10,9 +10,14 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      [
+        "@react-native-google-signin/google-signin", 
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.518168536052-p0cm7jblij9hpkaq2lqqbaoi4hlamrrk"
+        }
+      ],
       "expo-router",
-      "expo-apple-authentication",
-      "@react-native-google-signin/google-signin"
+      "expo-apple-authentication"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -32,13 +37,23 @@
     "ios": {
       "supportsTablet": true,
       "usesAppleSignIn": true,
-      "bundleIdentifier": "com.adi23546.ReadingRocket"
+      "bundleIdentifier": "com.adi23546.ReadingRocket",
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.518168536052-p0cm7jblij9hpkaq2lqqbaoi4hlamrrk"
+            ]
+          }
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.adi23546.ReadingRocket"
     },
     "extra": {
       "router": {

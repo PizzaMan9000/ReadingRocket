@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text, useTheme, Input, Button, Checkbox, Spinner } from 'tamagui';
 
 import { AppleAuth } from '@/components/auth/appleAuth';
+import GoogleAuth from '@/components/auth/googleAuth';
 import { supabase } from '@/services/supabase';
 import useLoginStore from '@/store/loginStore';
 
@@ -197,6 +198,7 @@ const Page = () => {
         </Text>
         <View flexDirection="row" mt={28}>
           <AppleAuth />
+          <GoogleAuth />
         </View>
       </View>
       <View w="100%" h={2} backgroundColor="#EDEDED" borderRadius={10} mt="$8" />
