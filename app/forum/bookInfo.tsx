@@ -1,5 +1,4 @@
 import { FontAwesome } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -7,12 +6,11 @@ import { View, ScrollView, Text, useTheme } from 'tamagui';
 
 import BackButton from '@/components/backButton';
 import BookItem from '@/components/forum/BookItem';
-import { pageAndID } from '@/interfaces/app/forumInterface';
+import useBooksStore from '@/store/booksStore';
 import { ForumContainer, ForumHeaders } from '@/tamagui.config';
 
 const Page = () => {
-  //Set zustand states
-  const [allSelectedPagesIds, setAllSelectedPagesIds] = useState<pageAndID[]>([]);
+  const { bookIdsPage } = useBooksStore();
   const [error, setError] = useState(false);
 
   const router = useRouter();
@@ -24,33 +22,17 @@ const Page = () => {
     complementaryColor: string;
   };
 
-  const getSelectedBooks = async () => {
-    try {
-      const selectedPagesIds = await AsyncStorage.getItem('@currentPagesBookIds');
-      console.log(selectedPagesIds);
-      if (selectedPagesIds != null) {
-        setAllSelectedPagesIds(JSON.parse(selectedPagesIds));
-      }
-    } catch (e) {
-      console.log(e);
-    }
-  };
+  useEffect(() => {
+    console.log('Book Ids Page', bookIdsPage);
+  }, [bookIdsPage]);
 
   const submitData = async () => {
-    try {
-      const selectedPagesIds = await AsyncStorage.getItem('@currentPagesBookIds');
-      console.log(selectedPagesIds);
-      if (selectedPagesIds != null) {
-        setAllSelectedPagesIds(JSON.parse(selectedPagesIds));
-      }
-    } catch (e) {
-      console.log(e);
-    }
-
     let hasError = false;
 
-    for (let i = 0; i < allSelectedPagesIds.length; i++) {
-      if (allSelectedPagesIds[i].pagesRead >= allSelectedPagesIds[i].pageCount) {
+    for (let i = 0; i < bookIdsPage.length; i++) {
+      const book = bookIdsPage[i]; // Extract the current book for readability
+
+      if (book && book.pageCount !== undefined && book.pagesRead >= book.pageCount) {
         hasError = true;
         console.log('HEY THERES AN ERROR');
         break; // Exit the loop early if an error is found
@@ -65,12 +47,8 @@ const Page = () => {
   };
 
   useEffect(() => {
-    getSelectedBooks();
-  }, []);
-
-  useEffect(() => {
-    console.log('🚀 ~ Page ~ allSelectedPagesIds:', allSelectedPagesIds);
-  }, [allSelectedPagesIds]);
+    console.log('🚀 ~ Page ~ allSelectedPagesIds:', bookIdsPage);
+  }, [bookIdsPage]);
 
   return (
     <LinearGradient
@@ -91,8 +69,9 @@ const Page = () => {
         )}
         <ForumContainer h={500} w="80%" mt={80}>
           <ScrollView>
-            {allSelectedPagesIds !== null &&
-              allSelectedPagesIds.map((item) => <BookItem id={item.id} key={item.id} />)}
+            {bookIdsPage.map((item) => (
+              <BookItem id={item.id} key={item.id} />
+            ))}
           </ScrollView>
         </ForumContainer>
         <View

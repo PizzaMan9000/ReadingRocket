@@ -1,12 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
 import React, { useEffect, useState } from 'react';
 import { Image } from 'react-native';
 import { View, Text, useTheme, Spinner, Input } from 'tamagui';
 
-import { pageAndID } from '@/interfaces/app/forumInterface';
 import { getIDSearchResults } from '@/services/api/bookApi';
+import useBooksStore from '@/store/booksStore';
 
 interface BookItemProps {
   id: string;
@@ -16,6 +15,7 @@ const BookItem = ({ id }: BookItemProps) => {
   const [pages, setPages] = useState('');
   const [pagesRead, setPagesRead] = useState('');
   const [mandatory, setMandatory] = useState(false);
+  const { bookIdsPage, setBookIdsPage } = useBooksStore();
 
   const idQuery = useQuery({
     queryKey: ['idSearch', id],
@@ -29,69 +29,124 @@ const BookItem = ({ id }: BookItemProps) => {
     complementaryColor: string;
   };
 
-  const savePages = async () => {
-    try {
-      const selectedPagesIds = await AsyncStorage.getItem('@currentPagesBookIds');
-      if (selectedPagesIds) {
-        const parsedPagesIds: pageAndID[] = JSON.parse(selectedPagesIds);
-        for (let i = 0; i < parsedPagesIds.length; i++) {
-          if (idQuery.data && !idQuery.isError) {
-            if (parsedPagesIds[i].id === idQuery.data.id) {
-              if (!pages) {
-                if (idQuery.data.volumeInfo.pageCount) {
-                  parsedPagesIds[i].pageCount = idQuery.data.volumeInfo.pageCount;
-                  await AsyncStorage.setItem(
-                    '@currentPagesBookIds',
-                    JSON.stringify(parsedPagesIds)
-                  );
-                  console.log('query reset done!');
-                }
-              } else {
-                parsedPagesIds[i].pageCount = parseInt(pages, 10);
-                await AsyncStorage.setItem('@currentPagesBookIds', JSON.stringify(parsedPagesIds));
-                console.log('input value added!');
-              }
+  const savePages = () => {
+    // try {
+    //   const selectedPagesIds = await AsyncStorage.getItem('@currentPagesBookIds');
+    //   if (selectedPagesIds) {
+    //     const parsedPagesIds: pageAndID[] = JSON.parse(selectedPagesIds);
+    //     for (let i = 0; i < parsedPagesIds.length; i++) {
+    //       if (idQuery.data && !idQuery.isError) {
+    //         if (parsedPagesIds[i].id === idQuery.data.id) {
+    //           if (!pages) {
+    //             if (idQuery.data.volumeInfo.pageCount) {
+    //               parsedPagesIds[i].pageCount = idQuery.data.volumeInfo.pageCount;
+    //               await AsyncStorage.setItem(
+    //                 '@currentPagesBookIds',
+    //                 JSON.stringify(parsedPagesIds)
+    //               );
+    //               console.log('query reset done!');
+    //             }
+    //           } else {
+    //             parsedPagesIds[i].pageCount = parseInt(pages, 10);
+    //             await AsyncStorage.setItem('@currentPagesBookIds', JSON.stringify(parsedPagesIds));
+    //             console.log('input value added!');
+    //           }
+    //         }
+    //       }
+    //     }
+    //   }
+    // } catch (e) {
+    //   console.log('🚀 ~ savePages ~ error:', e);
+    // }
+
+    const IdsPage = bookIdsPage;
+
+    for (let i = 0; i < IdsPage.length; i++) {
+      if (idQuery.data && !idQuery.isError) {
+        if (IdsPage[i].id === idQuery.data.id) {
+          if (!pages) {
+            if (
+              IdsPage[i].pageCount !== undefined &&
+              IdsPage[i].pageCount !== idQuery.data.volumeInfo.pageCount
+            ) {
+              setPages(IdsPage[i].pageCount?.toString() ?? '0');
+              return;
             }
+
+            if (idQuery.data.volumeInfo.pageCount) {
+              IdsPage[i].pageCount = idQuery.data.volumeInfo.pageCount;
+              setBookIdsPage(IdsPage);
+            }
+          } else {
+            IdsPage[i].pageCount = parseInt(pages, 10);
+            setBookIdsPage(IdsPage);
           }
         }
       }
-    } catch (e) {
-      console.log('🚀 ~ savePages ~ error:', e);
     }
   };
 
-  const savePagesRead = async () => {
-    try {
-      const selectedPagesIds = await AsyncStorage.getItem('@currentPagesBookIds');
-      if (selectedPagesIds) {
-        const parsedPagesIds: pageAndID[] = JSON.parse(selectedPagesIds);
-        for (let i = 0; i < parsedPagesIds.length; i++) {
-          if (idQuery.data && !idQuery.isError) {
-            if (parsedPagesIds[i].id === idQuery.data.id) {
-              if (!pagesRead) {
-                if (idQuery.data.volumeInfo.pageCount) {
-                  parsedPagesIds[i].pagesRead = 0;
-                  await AsyncStorage.setItem(
-                    '@currentPagesBookIds',
-                    JSON.stringify(parsedPagesIds)
-                  );
-                  console.log('reset done!');
-                }
-              } else {
-                parsedPagesIds[i].pagesRead = parseInt(pagesRead, 10);
-                await AsyncStorage.setItem('@currentPagesBookIds', JSON.stringify(parsedPagesIds));
-                console.log('input value added!');
-              }
+  const savePagesRead = () => {
+    // try {
+    //   const selectedPagesIds = await AsyncStorage.getItem('@currentPagesBookIds');
+    //   if (selectedPagesIds) {
+    //     const parsedPagesIds: pageAndID[] = JSON.parse(selectedPagesIds);
+    //     for (let i = 0; i < parsedPagesIds.length; i++) {
+    //       if (idQuery.data && !idQuery.isError) {
+    //         if (parsedPagesIds[i].id === idQuery.data.id) {
+    //           if (!pagesRead) {
+    //             if (idQuery.data.volumeInfo.pageCount) {
+    //               parsedPagesIds[i].pagesRead = 0;
+    //               await AsyncStorage.setItem(
+    //                 '@currentPagesBookIds',
+    //                 JSON.stringify(parsedPagesIds)
+    //               );
+    //               console.log('reset done!');
+    //             }
+    //           } else {
+    //             parsedPagesIds[i].pagesRead = parseInt(pagesRead, 10);
+    //             await AsyncStorage.setItem('@currentPagesBookIds', JSON.stringify(parsedPagesIds));
+    //             console.log('input value added!');
+    //           }
+    //         }
+    //       }
+    //     }
+    //   }
+    // } catch (e) {
+    //   console.log('🚀 ~ savePagesRead ~ error:', e);
+    // }
+
+    const IdsPage = bookIdsPage;
+
+    for (let i = 0; i < IdsPage.length; i++) {
+      if (idQuery.data && !idQuery.isError) {
+        if (IdsPage[i].id === idQuery.data.id) {
+          if (!pagesRead) {
+            if (IdsPage[i].pagesRead !== 0) {
+              setPagesRead(IdsPage[i].pagesRead.toString());
+              return;
             }
+            IdsPage[i].pagesRead = 0;
+            setBookIdsPage(IdsPage);
+          } else {
+            IdsPage[i].pagesRead = parseInt(pagesRead, 10);
+            setBookIdsPage(IdsPage);
           }
         }
       }
-    } catch (e) {
-      console.log('🚀 ~ savePagesRead ~ error:', e);
     }
   };
 
   useEffect(() => {
+    // Fix this
+    if (pages === null && idQuery.data && !idQuery.isError) {
+      if (idQuery.data.volumeInfo.pageCount) {
+        setPages(idQuery.data.volumeInfo.pageCount.toString());
+      } else {
+        setPages('100');
+      }
+    }
+
     savePages();
   }, [pages]);
 
@@ -106,6 +161,10 @@ const BookItem = ({ id }: BookItemProps) => {
       setMandatory(false);
     }
   }, [idQuery.data]);
+
+  useEffect(() => {
+    console.log('Book Ids Page', bookIdsPage);
+  }, [bookIdsPage]);
 
   return (
     <View w="100%" paddingVertical={10} paddingHorizontal={10}>

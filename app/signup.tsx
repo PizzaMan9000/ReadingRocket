@@ -1,19 +1,18 @@
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text, useTheme, Input, Button, Checkbox, Image, Spinner } from 'tamagui';
 
 import { supabase } from '@/services/clients/supabase';
-import useLoginStore from '@/store/loginStore';
 import { AuthButton } from '@/tamagui.config';
 
 const Page = () => {
-  const { email, setEmail } = useLoginStore();
-  const { password, setPassword } = useLoginStore();
-  const { loading, setLoading } = useLoginStore();
-  const { passwordIcon, setPasswordIcon } = useLoginStore();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [passwordIcon, setPasswordIcon] = useState(true);
 
   const theme = useTheme() as {
     primaryColor: string;

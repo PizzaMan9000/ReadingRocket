@@ -1,5 +1,4 @@
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRouter } from 'expo-router';
@@ -12,18 +11,18 @@ import SelectedCard from '@/components/forum/SelectedCard';
 import { Item } from '@/interfaces/api/bookApiResults';
 import { dataSaved } from '@/interfaces/app/forumInterface';
 import { getSearchResults } from '@/services/api/bookApi';
-import useSelectBooksState from '@/store/selectBooksStore';
+import useBooksStore from '@/store/booksStore';
 import { ForumHeaders } from '@/tamagui.config';
 import useDebounce from '@/utils/useDebounce';
 
 const SelectBooks = () => {
   // Set zustand states
-  const { searchValue, setSearchValue } = useSelectBooksState();
-  const { startIndex, setStartIndex } = useSelectBooksState();
+  const [searchValue, setSearchValue] = useState('');
+  const [startIndex, setStartIndex] = useState(0);
   const plusedSearchValue = searchValue.replace(' ', '+');
   const debouncedSearchValue = useDebounce(plusedSearchValue, 300);
   const [allBooks, setAllBooks] = useState<Item[]>([]);
-  const [selectedBooks, setSelectedBooks] = useState<dataSaved[]>([]);
+  const { selectedBooks, setSelectedBooks, bookIdsPage } = useBooksStore();
 
   const navigation = useNavigation();
 
@@ -82,37 +81,33 @@ const SelectBooks = () => {
     cover?: string,
     authors?: string[]
   ) => {
-    setSelectedBooks((prevSelectedBooks) => {
-      const isSelected = prevSelectedBooks.some((book) => book.id === bookId);
-      const updatedBooks = isSelected
-        ? prevSelectedBooks.filter((book) => book.id !== bookId)
-        : [...prevSelectedBooks, { id: bookId, title, cover, authors, pageCount }];
-      return updatedBooks;
-    });
+    const updatedBooks = selectedBooks.reduce((acc, book) => {
+      if (book.id === bookId) {
+        return acc; // Remove the book if it exists
+      } else {
+        return [...acc, book];
+      }
+    }, [] as dataSaved[]); // Initial accumulator as an empty array of dataSaved
+    updatedBooks.push({ id: bookId, title, cover, authors, pageCount } as dataSaved);
+    setSelectedBooks(updatedBooks);
   };
 
-  const removeBookFromSelection = (bookId: any) => {
-    setSelectedBooks((prevSelectedBooks) => prevSelectedBooks.filter((book) => book.id !== bookId));
+  const removeBookFromSelection = (bookId: string) => {
+    const updatedBooks = selectedBooks.filter((book) => book.id !== bookId);
+    setSelectedBooks(updatedBooks);
   };
 
   const screenTransfer = async () => {
-    // eslint-disable-next-line prettier/prettier, no-sequences, no-unused-expressions
-    const bookIdsPage = selectedBooks.map(item => ({id: item.id, pageCount: item.pageCount, pagesRead: 0 }))
-
-    try {
-      await AsyncStorage.setItem('@currentPagesBookIds', JSON.stringify(bookIdsPage));
-    } catch (e) {
-      console.log(e);
-      // set up error handling
-      return;
-    }
-
     if (selectedBooks.length === 0) {
       router.replace('/forum/loading');
     } else {
       router.push('/forum/bookInfo');
     }
   };
+
+  useEffect(() => {
+    console.log(bookIdsPage);
+  }, [bookIdsPage]);
 
   const theme = useTheme() as {
     primaryColor: string;

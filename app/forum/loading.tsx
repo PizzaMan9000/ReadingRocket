@@ -3,12 +3,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import { Text, Progress, useTheme } from 'tamagui';
 
-import { pageAndID } from '@/interfaces/app/forumInterface';
 import { supabase } from '@/services/clients/supabase';
+import useBooksStore from '@/store/booksStore';
 
 const Page = () => {
   const [progress, setProgress] = useState(0);
   const [text, setText] = useState('');
+  const { bookIdsPage } = useBooksStore();
 
   useEffect(() => {
     const timeout1 = setTimeout(async () => {
@@ -38,20 +39,16 @@ const Page = () => {
           data: { user: User },
         } = await supabase.auth.getUser();
 
-        const bookData = await AsyncStorage.getItem('@currentPagesBookIds');
-
-        if (bookData != null) {
-          const bookIds = JSON.parse(bookData); // Parse book IDs into an array
+        if (bookIdsPage != null) {
+          const bookIds = bookIdsPage; // Parse book IDs into an array
 
           // Use map to create an array of promises for book insertions
-          const bookInsertionPromises = bookIds.map(async (pageId: pageAndID) => {
+          const bookInsertionPromises = bookIds.map(async (pageId: any) => {
             console.log(' ~ timeout2 ~ id:', pageId.id);
             try {
               if (!pageId.hasOwnProperty('pageCount')) {
                 pageId.pageCount = 100;
               }
-
-              await AsyncStorage.removeItem('@userBooks');
 
               return await supabase
                 .from('user_books')
@@ -87,13 +84,8 @@ const Page = () => {
     }, 7000);
     const timeout4 = setTimeout(async () => {
       setText('Fetching your tools...');
-      try {
-        await AsyncStorage.removeItem('@currentBookIds');
-      } catch (e) {
-        console.log(e);
-      } finally {
-        setProgress(100);
-      }
+      await AsyncStorage.removeItem('@currentBookIds');
+      setProgress(100);
     }, 10000);
 
     return () => {

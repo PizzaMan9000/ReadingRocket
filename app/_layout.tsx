@@ -94,6 +94,9 @@ const InitalLayout = () => {
       } catch (e) {
         console.log('error occured', e);
       }
+    } else if (data.length === 0 && User) {
+      router.replace('/forum/userForum');
+      console.log('Transferring to the forums');
     }
   };
 

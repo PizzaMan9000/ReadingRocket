@@ -2,13 +2,12 @@ import { Entypo, FontAwesome, FontAwesome6 } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Input, RadioGroup, YStack, Text, useTheme } from 'tamagui';
 
 import ToggleGroupText from '@/components/forum/ToggleGroupText';
 import { RadioGroupItemWithLabel } from '@/components/forum/radioGroupLabel';
 import { supabase } from '@/services/clients/supabase';
-import useUserForumStore from '@/store/userForumStore';
 import {
   UserForumProffessionSelected,
   UserForumProffessionUnselected,
@@ -19,11 +18,13 @@ import {
 } from '@/tamagui.config';
 
 const Page = () => {
-  const { name, setName } = useUserForumStore();
-  const { profession, setProfession } = useUserForumStore();
-  const { readingCategory, setReadingCategory } = useUserForumStore();
-  const { typeOfReader, setTypeOfReader } = useUserForumStore();
-  const { errorMessage, setErrorMessage } = useUserForumStore();
+  const [name, setName] = useState('');
+  const [profession, setProfession] = useState<'job' | 'student'>('student');
+  const [readingCategory, setReadingCategory] = useState<'fiction' | 'nonfiction' | 'both'>(
+    'fiction'
+  );
+  const [typeOfReader, setTypeOfReader] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const theme = useTheme() as {
     primaryColor: string;
