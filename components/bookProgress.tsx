@@ -1,6 +1,6 @@
 import { Feather, FontAwesome, Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { Image } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { View, Text, useTheme, Progress, Button, Input } from 'tamagui';
 
 import { IDBook } from '@/interfaces/api/bookidApiResult';
@@ -95,11 +95,9 @@ const BookProgress = ({ book, setBooks }: BookProgressProps) => {
   return (
     <View flexDirection="row" marginVertical={20}>
       {book.volumeInfo.imageLinks ? (
-        <Image
+        <FastImage
           source={{
             uri: book.volumeInfo.imageLinks.smallThumbnail,
-            width: 65,
-            height: 90,
           }}
           style={{ borderRadius: 5, width: 65, height: 90 }}
         />
