@@ -1,14 +1,15 @@
 import { Feather, FontAwesome } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { View, Text, Input, Button, useTheme } from 'tamagui';
 
 import BackButton from '@/components/backButton';
 import { supabase } from '@/services/clients/supabase';
+import useProgressStore from '@/store/progressStore';
 
 const Page = () => {
   const [amountOfPages, setAmountOfPages] = useState(10);
+  const { setReadingGoals } = useProgressStore();
 
   const theme = useTheme() as {
     complementaryColorTwo: string;
@@ -22,7 +23,7 @@ const Page = () => {
 
   const submitReadingGoals = async () => {
     try {
-      await AsyncStorage.setItem('@readingGoals', amountOfPages.toString());
+      setReadingGoals(amountOfPages);
 
       const {
         data: { user: User },

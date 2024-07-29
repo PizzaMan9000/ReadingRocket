@@ -3,18 +3,23 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { View, Text, useTheme, Separator, ScrollView, Button } from 'tamagui';
+import { View, Text, useTheme, Separator, ScrollView, Button, Spinner } from 'tamagui';
 
 import BookProgress from '@/components/bookProgress';
 import Header from '@/components/header';
 import PageDisplay from '@/components/pageDisplay';
 import { IDBook } from '@/interfaces/api/bookidApiResult';
 import { supabase } from '@/services/clients/supabase';
+import useBooksStore from '@/store/booksStore';
+import useProgressStore from '@/store/progressStore';
 
 const Page = () => {
-  const [books, setBooks] = useState<IDBook[]>();
+  const [displayBooks, setDisplayBooks] = useState<IDBook[]>();
   const [isNew, setIsNew] = useState<boolean>();
   const [dailyPages, setDailyPages] = useState<number>(0);
+  const [goalsLoading, setGoalsLoading] = useState<boolean>();
+  const { dailyPagesRead, readingGoals } = useProgressStore();
+  const { books } = useBooksStore();
 
   const theme = useTheme() as {
     complementaryColorTwo: string;
@@ -26,56 +31,23 @@ const Page = () => {
 
   const router = useRouter();
 
-  const getDailyPagesRead = async () => {
-    try {
-      const dailyPagesRead = await AsyncStorage.getItem('@dailyPagesRead');
-      if (dailyPagesRead) {
-        console.log('something found!');
-        setDailyPages(parseInt(dailyPagesRead, 10));
-      } else {
-        // Error handling
-        console.log('Error found!');
-      }
-    } catch (e) {
-      console.log('🚀 ~ getDailyPagesRead ~ e:', e);
-    }
-  };
-
   const getReadingGoals = async () => {
-    try {
-      const readingGoals = await AsyncStorage.getItem('@readingGoals');
-      if (readingGoals) {
+    if (readingGoals !== 0) {
+      setIsNew(false);
+    } else {
+      setGoalsLoading(true);
+      const {
+        data: { user: User },
+      } = await supabase.auth.getUser();
+
+      const { data, error } = await supabase.from('user_goals').select().eq('user_id', User?.id);
+      if (data?.length !== 0) {
         setIsNew(false);
       } else {
-        const {
-          data: { user: User },
-        } = await supabase.auth.getUser();
-
-        const { data, error } = await supabase.from('user_goals').select().eq('user_id', User?.id);
-        if (data) {
-          setIsNew(false);
-        } else {
-          console.log('🚀 ~ getReadingGoals ~ error:', error);
-          setIsNew(true);
-        }
+        console.log('🚀 ~ getReadingGoals ~ error:', error);
+        setIsNew(true);
       }
-    } catch (e) {
-      console.log('🚀 ~ getReadingGoals ~ e:', e);
-    }
-  };
-
-  const getBooks = async () => {
-    try {
-      const rawBooks = await AsyncStorage.getItem('@userBooks');
-      if (rawBooks) {
-        const parsedBooks = JSON.parse(rawBooks);
-        setBooks(parsedBooks);
-      } else {
-        // Do some error handling later
-        console.log('rawBooks is null');
-      }
-    } catch (e) {
-      console.log('🚀 ~ getBooks ~ e:', e);
+      setGoalsLoading(false);
     }
   };
 
@@ -96,15 +68,18 @@ const Page = () => {
     if (dailyPages < 0) {
       setDailyPages(0);
     }
-
     saveDailyPages();
   }, [dailyPages]);
 
   useEffect(() => {
-    getDailyPagesRead();
+    setDailyPages(dailyPagesRead);
     getReadingGoals();
-    getBooks();
+    setDisplayBooks(books);
   }, []);
+
+  useEffect(() => {
+    console.log('isNew', isNew);
+  }, [isNew]);
 
   return (
     <View paddingHorizontal={20} paddingTop={72} flex={1}>
@@ -114,7 +89,20 @@ const Page = () => {
         backMarginLeft={0}
         backAbsolute={false}
       />
-      {isNew ? (
+      {goalsLoading && (
+        <View
+          w={353}
+          h={148}
+          borderRadius={5}
+          alignItems="center"
+          justifyContent="center"
+          alignSelf="center"
+          bc={theme.complementaryColor}
+          mt={30}>
+          <Spinner size="large" color="#6247AA" />
+        </View>
+      )}
+      {isNew && !goalsLoading ? (
         <LinearGradient
           colors={['#6247AA', '#A06CD5']}
           style={{
@@ -132,42 +120,44 @@ const Page = () => {
           </Button>
         </LinearGradient>
       ) : (
-        <View
-          mt={20}
-          w="100%"
-          borderRadius={5}
-          backgroundColor={theme.complementaryColor}
-          padding={20}
-          alignItems="center"
-          justifyContent="center">
-          {dailyPages ? (
-            <Text color="#6247AA" textAlign="center" fontSize={64} fontWeight={600}>
-              {dailyPages}
-            </Text>
-          ) : (
-            <Text color="#6247AA" textAlign="center" fontSize={64} fontWeight={600}>
-              0
-            </Text>
-          )}
-          <Text color="#6247AA" textAlign="center" fontSize={20} fontWeight={600}>
-            Pages read
-          </Text>
+        !goalsLoading && (
           <View
-            mt={22}
+            mt={20}
             w="100%"
-            padding={10}
             borderRadius={5}
-            backgroundColor="#FFE86B"
-            flexDirection="row"
-            justifyContent="space-around"
-            alignItems="center">
-            <Ionicons name="sparkles-sharp" size={24} color="#866E0D" />
-            <Text textAlign="center" color="#866E0D" fontSize={12} fontWeight={600}>
-              You have completed your daily streak!
+            backgroundColor={theme.complementaryColor}
+            padding={20}
+            alignItems="center"
+            justifyContent="center">
+            {dailyPages ? (
+              <Text color="#6247AA" textAlign="center" fontSize={64} fontWeight={600}>
+                {dailyPages}
+              </Text>
+            ) : (
+              <Text color="#6247AA" textAlign="center" fontSize={64} fontWeight={600}>
+                0
+              </Text>
+            )}
+            <Text color="#6247AA" textAlign="center" fontSize={20} fontWeight={600}>
+              Pages read
             </Text>
-            <Ionicons name="sparkles-sharp" size={24} color="#866E0D" />
+            <View
+              mt={22}
+              w="100%"
+              padding={10}
+              borderRadius={5}
+              backgroundColor="#FFE86B"
+              flexDirection="row"
+              justifyContent="space-around"
+              alignItems="center">
+              <Ionicons name="sparkles-sharp" size={24} color="#866E0D" />
+              <Text textAlign="center" color="#866E0D" fontSize={12} fontWeight={600}>
+                You have completed your daily streak!
+              </Text>
+              <Ionicons name="sparkles-sharp" size={24} color="#866E0D" />
+            </View>
           </View>
-        </View>
+        )
       )}
       <PageDisplay />
       <Separator marginVertical={40} borderColor="#C6C6C6" />
@@ -175,15 +165,9 @@ const Page = () => {
         In progress
       </Text>
       <ScrollView>
-        {books &&
-          books.map((item) => (
-            <BookProgress
-              key={item.id}
-              book={item}
-              setBooks={setBooks}
-              setDailyPages={setDailyPages}
-              dailyPages={dailyPages}
-            />
+        {displayBooks &&
+          displayBooks.map((item) => (
+            <BookProgress key={item.id} book={item} setBooks={setDisplayBooks} />
           ))}
       </ScrollView>
     </View>

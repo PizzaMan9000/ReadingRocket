@@ -5,11 +5,13 @@ import { Text, Progress, useTheme } from 'tamagui';
 
 import { supabase } from '@/services/clients/supabase';
 import useBooksStore from '@/store/booksStore';
+import useProgressStore from '@/store/progressStore';
 
 const Page = () => {
   const [progress, setProgress] = useState(0);
   const [text, setText] = useState('');
-  const { bookIdsPage } = useBooksStore();
+  const { bookIdsPage, setBooks, setBookIdsPage, setSelectedBooks } = useBooksStore();
+  const { setDailyPagesRead, setReadingGoals } = useProgressStore();
 
   useEffect(() => {
     const timeout1 = setTimeout(async () => {
@@ -84,10 +86,13 @@ const Page = () => {
     }, 7000);
     const timeout4 = setTimeout(async () => {
       setText('Fetching your tools...');
-      await AsyncStorage.removeItem('@currentBookIds');
+      setDailyPagesRead(0);
+      setBookIdsPage([]);
+      setBooks([]);
+      setSelectedBooks([]);
+      setReadingGoals(0);
       setProgress(100);
     }, 10000);
-
     return () => {
       clearTimeout(timeout1);
       clearTimeout(timeout2);

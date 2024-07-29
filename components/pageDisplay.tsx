@@ -5,10 +5,12 @@ import { Image } from 'react-native';
 import { View, Text, useTheme, Progress } from 'tamagui';
 
 import { supabase } from '@/services/clients/supabase';
+import useProgressStore from '@/store/progressStore';
 
 const PageDisplay = () => {
-  const [readingGoals, setReadingGoals] = useState<string>();
+  const [fetchedReadingGoals, setFetchedReadingGoals] = useState<string>();
   const [streak, setStreak] = useState<number>();
+  const { readingGoals } = useProgressStore();
 
   const theme = useTheme() as {
     complementaryColorTwo: string;
@@ -20,9 +22,8 @@ const PageDisplay = () => {
 
   const getReadingGoals = async () => {
     try {
-      const fetchedReadingGoals = await AsyncStorage.getItem('@readingGoals');
       if (fetchedReadingGoals) {
-        setReadingGoals(fetchedReadingGoals);
+        setFetchedReadingGoals(readingGoals.toString());
       } else {
         const {
           data: { user: User },
@@ -30,7 +31,7 @@ const PageDisplay = () => {
 
         const { data, error } = await supabase.from('user_goals').select().eq('user_id', User?.id);
         if (data) {
-          setReadingGoals(data[0].page_goal);
+          setFetchedReadingGoals(data[0].page_goal);
         } else {
           console.log('🚀 ~ getReadingGoals ~ error:', error);
         }
@@ -65,9 +66,9 @@ const PageDisplay = () => {
       <View flexDirection="row" mt={15} alignItems="center">
         <View flexDirection="row" alignItems="center" flex={1}>
           <Feather name="target" size={14} color="black" />
-          {readingGoals ? (
+          {fetchedReadingGoals ? (
             <Text ml={6} fontSize={12} fontWeight={500}>
-              <Text fontWeight={700}>Goal: </Text> {readingGoals} pages daily
+              <Text fontWeight={700}>Goal: </Text> {fetchedReadingGoals} pages daily
             </Text>
           ) : (
             <Text ml={6} fontSize={12} fontWeight={500}>
@@ -114,9 +115,9 @@ const PageDisplay = () => {
       </View>
       <View mt={14}>
         <View flexDirection="row">
-          {readingGoals ? (
+          {fetchedReadingGoals ? (
             <Text color="#ABABAB" fontSize={10} fontWeight={400} flex={1}>
-              6/{readingGoals} pages
+              6/{fetchedReadingGoals} pages
             </Text>
           ) : (
             <Text color="#ABABAB" fontSize={10} fontWeight={400} flex={1}>

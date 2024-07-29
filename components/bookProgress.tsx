@@ -1,31 +1,30 @@
 import { Feather, FontAwesome, Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { Image } from 'react-native';
 import { View, Text, useTheme, Progress, Button, Input } from 'tamagui';
 
 import { IDBook } from '@/interfaces/api/bookidApiResult';
 import { supabase } from '@/services/clients/supabase';
+import useBooksStore from '@/store/booksStore';
 
 interface BookProgressProps {
   book: IDBook;
   setBooks: (books: IDBook[]) => void;
-  dailyPages: number;
-  setDailyPages: (dailyPages: number) => void;
 }
 
-interface PageInfoType {
-  id: number;
-  user_id: string;
-  bookid: string;
-  amount_of_pages: string;
-  pages_read: string;
-}
+// interface PageInfoType {
+//   id: number;
+//   user_id: string;
+//   bookid: string;
+//   amount_of_pages: string;
+//   pages_read: string;
+// }
 
-const BookProgress = ({ book, setBooks, dailyPages, setDailyPages }: BookProgressProps) => {
+const BookProgress = ({ book, setBooks }: BookProgressProps) => {
   const [pages, setPages] = useState('');
   const [pagesRead, setPagesRead] = useState('');
   const [defaultColor, setDefaultColor] = useState<boolean>();
+  const { bookIdsPage, setBookIdsPage, books } = useBooksStore();
 
   const theme = useTheme() as {
     complementaryColorTwo: string;
@@ -35,82 +34,53 @@ const BookProgress = ({ book, setBooks, dailyPages, setDailyPages }: BookProgres
     complementaryColor: string;
   };
 
-  const getPageInfo = async () => {
-    try {
-      const rawPageInfo = await AsyncStorage.getItem('@pageInfo');
-      if (rawPageInfo) {
-        const parsedPageInfo: PageInfoType[] = JSON.parse(rawPageInfo);
-        for (let i = 0; i < parsedPageInfo.length; i++) {
-          if (parsedPageInfo[i].bookid === book.id) {
-            setPages(parsedPageInfo[i].amount_of_pages);
-            setPagesRead(parsedPageInfo[i].pages_read);
-            if (i % 2 === 0) {
-              setDefaultColor(true);
-            } else {
-              setDefaultColor(false);
-            }
-          }
+  const getPageInfo = () => {
+    for (let i = 0; i < bookIdsPage.length; i++) {
+      if (bookIdsPage[i].id === book.id) {
+        setPages((bookIdsPage[i].pageCount ?? 0).toString());
+        setPagesRead(bookIdsPage[i].pagesRead.toString());
+        if (i % 2 === 0) {
+          setDefaultColor(true);
+        } else {
+          setDefaultColor(false);
         }
-      } else {
-        // Error handling later
-        console.log('error detected');
       }
-    } catch (e) {
-      console.log('🚀 ~ getPageInfo ~ error:', e);
     }
   };
 
   const deleteBook = async () => {
-    try {
-      const rawBookInfo = await AsyncStorage.getItem('@userBooks');
-      if (rawBookInfo) {
-        let parsedBookInfo: IDBook[] = JSON.parse(rawBookInfo);
-        parsedBookInfo = parsedBookInfo.filter((idBook) => idBook.id !== book.id);
-        setBooks(parsedBookInfo);
+    const changedBooks = books.filter((idBook) => idBook.id !== book.id);
+    setBooks(changedBooks);
 
-        await AsyncStorage.setItem('@userBooks', JSON.stringify(parsedBookInfo));
-      } else {
-        console.log('Error spotted!');
-        // Error handling
-      }
-
-      const response = await supabase.from('user_books').delete().eq('bookid', book.id);
-      console.log('🚀 ~ deleteBook ~ supabase response:', response);
-    } catch (e) {
-      console.log('🚀 ~ deleteBook ~ e:', e);
-    }
+    const response = await supabase.from('user_books').delete().eq('bookid', book.id);
+    console.log('🚀 ~ deleteBook ~ supabase response:', response);
   };
 
   const updatePagesRead = async () => {
-    if (pagesRead === null) {
-      setPagesRead('0');
+    if (typeof pagesRead !== 'string') {
+      setPagesRead('0'); // Set a default value if not a string
+      return;
     }
-    if (parseInt(pagesRead, 10) > parseInt(pages, 10)) {
-      setPagesRead(pages);
+    const parsedPagesRead = parseInt(pagesRead, 10);
+    if (isNaN(parsedPagesRead)) {
+      console.log('Invalid pagesRead value:', pagesRead);
+      return; // Handle the error gracefully
     }
-    if (parseInt(pagesRead, 10) < 0) {
-      setPagesRead('0');
-    }
-    try {
-      const rawPageInfo = await AsyncStorage.getItem('@pageInfo');
-      if (rawPageInfo) {
-        const parsedPageInfo: PageInfoType[] = JSON.parse(rawPageInfo);
-        for (let i = 0; i < parsedPageInfo.length; i++) {
-          if (parsedPageInfo[i].bookid === book.id) {
-            parsedPageInfo[i].pages_read = pagesRead;
-            await AsyncStorage.setItem('@pageInfo', JSON.stringify(parsedPageInfo));
-          }
-        }
-      } else {
-        // Error handling later
-        console.log('error detected');
+    setPagesRead(Math.max(0, Math.min(parsedPagesRead, parseInt(pages, 10))).toString());
+
+    for (let i = 0; i < bookIdsPage.length; i++) {
+      if (bookIdsPage[i].id === book.id) {
+        const mutableBookIdsPage = bookIdsPage;
+        mutableBookIdsPage[i].pagesRead = parseInt(pagesRead, 10);
+        setBookIdsPage(mutableBookIdsPage);
+        // Do the supabase code
+        console.log('setting is done!');
       }
-    } catch (e) {
-      throw new Error(`update Pages Read ${e}`);
     }
   };
 
   useEffect(() => {
+    console.log('books', bookIdsPage);
     updatePagesRead();
   }, [pagesRead]);
 

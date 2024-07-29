@@ -8,18 +8,21 @@ import { View, Text, Image, useTheme, Spinner, ScrollView } from 'tamagui';
 import NotificationButton from '@/components/notificationButton';
 import PageDisplay from '@/components/pageDisplay';
 import { IDBook } from '@/interfaces/api/bookidApiResult';
-import { SearchedImage } from '@/interfaces/api/imageApiResults';
 import { UserForum } from '@/interfaces/app/homeInterface';
 import { getIDSearchResults } from '@/services/api/bookApi';
 import { getImageSearchResults } from '@/services/api/imageApi';
 import { supabase } from '@/services/clients/supabase';
+import useBooksStore from '@/store/booksStore';
+import useImageFetchStore from '@/store/imageFetchStore';
 
 const Page = () => {
   // Set zustand states
   const [userForumData, setUserForumData] = useState<UserForum[]>();
   const [imageLink, setImageLink] = useState('');
   const [enableImageQuery, setEnableImageQuery] = useState(false);
-  const [books, setBooks] = useState<IDBook[]>([]);
+  const { books, setBooks } = useBooksStore();
+  const { imageFetchLink, setImageFetchLink, imageRefreshCounter, changeImageRefreshCounter } =
+    useImageFetchStore();
   const [idSearchValue, setIdSearchValue] = useState('');
   const [enableBooksQuery, setEnableBooksQuery] = useState(false);
   const [bookLoopTrigger, setBookLoopTrigger] = useState(false);
@@ -49,44 +52,19 @@ const Page = () => {
   });
 
   const getImageLink = async () => {
-    try {
-      const imageLinkRaw = await AsyncStorage.getItem('@ImageQueryData');
-      const imageRefreshCounter = await AsyncStorage.getItem('@ImageRefreshCounter');
-      console.log('🚀 ~ getImageLink ~ imageRefreshCounter:', imageRefreshCounter);
-      if (imageLinkRaw) {
-        if (imageRefreshCounter) {
-          if (parseInt(imageRefreshCounter, 10) <= 5) {
-            console.log('uhdodijjj');
-            const imageLinkJSON: SearchedImage = JSON.parse(imageLinkRaw);
-            console.log('🚀 ~ getImageLink ~ imageLinkJSON:', imageLinkJSON);
-            const randomNumber = Math.floor(Math.random() * 10) + 1;
-            setImageLink(imageLinkJSON.results[randomNumber].urls.regular);
-            setPhotographerName(imageLinkJSON.results[randomNumber].user.name);
-            console.log('Got image link from AsyncStorage');
-            const parsedValue = parseInt(imageRefreshCounter, 10) + 1;
-            await AsyncStorage.setItem('@ImageRefreshCounter', parsedValue.toString());
-            console.log('🚀 ~ getImageLink ~ imageRefreshCounter:', imageRefreshCounter);
-          } else {
-            console.log('🚀 ~ getImageLink ~ imageRefreshCounter ggggggg:', imageRefreshCounter);
-            await imageQuery.refetch();
-            await AsyncStorage.setItem('@ImageRefreshCounter', '0');
-          }
-        } else {
-          console.log('ihpouikk');
-          await AsyncStorage.setItem('@ImageRefreshCounter', '0');
-          const imageLinkJSON: SearchedImage = JSON.parse(imageLinkRaw);
-          const randomNumber = Math.floor(Math.random() * 10) + 1;
-          setImageLink(imageLinkJSON.results[randomNumber].urls.regular);
-          setPhotographerName(imageLinkJSON.results[randomNumber].user.name);
-          console.log('Got image link from AsyncStorage');
-          console.log('🚀 ~ getImageLink ~ imageRefreshCounter:', imageRefreshCounter);
-        }
+    if (imageFetchLink !== null) {
+      if (imageRefreshCounter <= 5) {
+        const randomNumber = Math.floor(Math.random() * 10) + 1;
+        setImageLink(imageFetchLink.results[randomNumber].urls.regular);
+        setPhotographerName(imageFetchLink.results[randomNumber].user.name);
+        changeImageRefreshCounter('increase');
       } else {
-        setEnableImageQuery(true);
-        console.log('🚀 ~ getImageLink ~ imageRefreshCounter:', imageRefreshCounter);
+        setImageFetchLink(null);
+        await imageQuery.refetch();
+        changeImageRefreshCounter('reset');
       }
-    } catch (e) {
-      throw new Error(`🚀 ~ getImageLink ~ error: ${e}`);
+    } else {
+      setEnableImageQuery(true);
     }
   };
 
@@ -116,38 +94,19 @@ const Page = () => {
 
     if (User) {
       const { data, error } = await supabase.from('user_books').select().eq('user_id', User.id);
+      if (data !== null) {
+        const bookIds: { id: number; uuid: string; bookid: string; amount_of_pages: string }[] =
+          data;
 
-      if (data) {
-        try {
-          const globalBookData = await AsyncStorage.getItem('@userBooks');
+        bookIds.push({ id: 1, uuid: 'bogus', bookid: 'bogus', amount_of_pages: '1' });
+        bookIds.push({ id: 12, uuid: 'bogus2', bookid: 'bogus2', amount_of_pages: '1' });
 
-          if (globalBookData) {
-            const parsedGlobalBookData = JSON.parse(globalBookData);
-            setBooks(parsedGlobalBookData);
-            setBookLoopTrigger(true);
-            setSliceTrigger(true);
-            console.log('Got books from asyncstorage');
-          } else {
-            const bookIds: { id: number; uuid: string; bookid: string; amount_of_pages: string }[] =
-              data;
-
-            bookIds.push({ id: 1, uuid: 'bogus', bookid: 'bogus', amount_of_pages: '1' });
-            bookIds.push({ id: 12, uuid: 'bogus2', bookid: 'bogus2', amount_of_pages: '1' });
-
-            console.log('🚀 ~ getBooksData ~ data:', bookIds);
-            for await (const idCollection of bookIds) {
-              setEnableBooksQuery(true);
-              setIdSearchValue(idCollection.bookid);
-              await getBooksQuery.refetch();
-            }
-            setBookLoopTrigger(true);
-          }
-          setBookLoopTrigger(true);
-
-          await AsyncStorage.setItem('@pageInfo', JSON.stringify(data));
-        } catch (e) {
-          throw new Error(`🚀 ~ getBooksData ~ error: ${e}`);
+        for await (const idCollection of bookIds) {
+          setEnableBooksQuery(true);
+          setIdSearchValue(idCollection.bookid);
+          await getBooksQuery.refetch();
         }
+        setBookLoopTrigger(true);
       }
 
       if (error) {
@@ -171,6 +130,7 @@ const Page = () => {
       if (imageQuery.data) {
         setImageLink(imageQuery.data.results[0].urls.regular);
         setPhotographerName(imageQuery.data.results[0].user.name);
+        setImageFetchLink(imageQuery.data);
         console.log('gggggggg', imageQuery.data.results[0].urls.regular);
         console.log('Got image link from query');
       }
@@ -178,7 +138,12 @@ const Page = () => {
   }, [imageQuery.data]);
 
   useEffect(() => {
-    getBooksData();
+    if (books.length === 0) {
+      getBooksData();
+    } else {
+      console.log('YTVUBHIKNJLKM;,L', books);
+      setSliceTrigger(true);
+    }
     getImageLink();
     getUserForumData();
   }, []);

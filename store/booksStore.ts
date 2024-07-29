@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+import { IDBook } from '@/interfaces/api/bookidApiResult';
 import { dataSaved } from '@/interfaces/app/forumInterface';
 import { zustandStorage } from '@/services/clients/mmkv';
 
@@ -15,6 +16,8 @@ export interface BooksState {
   setSelectedBooks: (selectedBooks: dataSaved[]) => void;
   bookIdsPage: BookIdsPageProps[];
   setBookIdsPage: (bookIdsPage: BookIdsPageProps[]) => void;
+  books: IDBook[];
+  setBooks: (books: IDBook[]) => void;
 }
 
 const useBooksStore = create<BooksState>()(
@@ -38,6 +41,8 @@ const useBooksStore = create<BooksState>()(
       bookIdsPage: [],
       setBookIdsPage: (bookIdsPage: BookIdsPageProps[]) =>
         set((state) => ({ ...state, bookIdsPage })),
+      books: [],
+      setBooks: (books: IDBook[]) => set((state) => ({ ...state, books })),
     }),
     {
       name: 'app-storage',
