@@ -12,7 +12,7 @@ import { UserForum } from '@/interfaces/app/homeInterface';
 import { getIDSearchResults } from '@/services/api/bookApi';
 import { getImageSearchResults } from '@/services/api/imageApi';
 import { supabase } from '@/services/clients/supabase';
-import useBooksStore from '@/store/booksStore';
+import useBooksStore, { BookIdsPageProps } from '@/store/booksStore';
 import useImageFetchStore from '@/store/imageFetchStore';
 
 const Page = () => {
@@ -25,9 +25,12 @@ const Page = () => {
     useImageFetchStore();
   const [idSearchValue, setIdSearchValue] = useState('');
   const [enableBooksQuery, setEnableBooksQuery] = useState(false);
+  const [globalBookIdsPageArray, setGlobalBookIdsPageArray] = useState<BookIdsPageProps[]>();
   const [bookLoopTrigger, setBookLoopTrigger] = useState(false);
   const [sliceTrigger, setSliceTrigger] = useState(false);
   const [photographerName, setPhotographerName] = useState('');
+  const bookIdsPage = useBooksStore((state) => state.bookIdsPage);
+  const setBookIdsPage = useBooksStore((state) => state.setBookIdsPage);
 
   const theme = useTheme() as {
     complementaryColorTwo: string;
@@ -95,11 +98,48 @@ const Page = () => {
     if (User) {
       const { data, error } = await supabase.from('user_books').select().eq('user_id', User.id);
       if (data !== null) {
-        const bookIds: { id: number; uuid: string; bookid: string; amount_of_pages: string }[] =
-          data;
+        const bookIds: {
+          id: number;
+          uuid: string;
+          bookid: string;
+          amount_of_pages: string;
+          pages_read: string;
+        }[] = data;
 
-        bookIds.push({ id: 1, uuid: 'bogus', bookid: 'bogus', amount_of_pages: '1' });
-        bookIds.push({ id: 12, uuid: 'bogus2', bookid: 'bogus2', amount_of_pages: '1' });
+        const bookIdsPageArray: BookIdsPageProps[] = [];
+
+        // Debug: Log data and bookIds before the loop
+        console.log('data:', data);
+        console.log('bookIds:', bookIds);
+
+        // Iterate through data to populate bookIdsPageArray
+        for (let i = 0; i < data.length; i++) {
+          bookIdsPageArray.push({
+            id: bookIds[i].bookid,
+            pageCount: parseInt(bookIds[i].amount_of_pages, 10),
+            pagesRead: parseInt(bookIds[i].pages_read, 10),
+          });
+        }
+
+        // Set the state with the updated array
+        setGlobalBookIdsPageArray(bookIdsPageArray);
+
+        bookIds.push({
+          id: 1,
+          uuid: 'bogus',
+          bookid: 'bogus',
+          amount_of_pages: '1',
+          pages_read: '0',
+        });
+        bookIds.push({
+          id: 12,
+          uuid: 'bogus2',
+          bookid: 'bogus2',
+          amount_of_pages: '1',
+          pages_read: '0',
+        });
+
+        console.log('THIS IS HAPPENING');
 
         for await (const idCollection of bookIds) {
           setEnableBooksQuery(true);
@@ -133,10 +173,10 @@ const Page = () => {
         setImageFetchLink(imageQuery.data);
         console.log('gggggggg', imageQuery.data.results[0].urls.regular);
         console.log('Got image link from query');
+        console.log('🚀 ~ Page ~ imageQuery.data:', imageQuery.data);
       }
     }
   }, [imageQuery.data]);
-
   useEffect(() => {
     if (books.length === 0) {
       getBooksData();
@@ -149,8 +189,10 @@ const Page = () => {
   }, []);
 
   useEffect(() => {
-    if (getBooksQuery.data) {
+    if (getBooksQuery.data && globalBookIdsPageArray !== undefined) {
       setBooks(books.concat(getBooksQuery.data));
+      setBookIdsPage(globalBookIdsPageArray);
+      console.log('bookIdsPage state:', bookIdsPage);
       console.log('BOOK! 😡', books);
       if (bookLoopTrigger) {
         const newBooks = books.filter((_, index) => index !== 0);
@@ -162,6 +204,10 @@ const Page = () => {
       }
     }
   }, [getBooksQuery.data]);
+
+  useEffect(() => {
+    console.log('BOOKIYUVBNOWOHIQWHIPWOHW', books);
+  }, [books]);
 
   return (
     <View flex={1} paddingHorizontal={20} paddingTop={72}>

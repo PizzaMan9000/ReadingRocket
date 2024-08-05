@@ -1,15 +1,15 @@
 import { Feather, FontAwesome, Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import FastImage from 'react-native-fast-image';
+import { Image } from 'react-native';
 import { View, Text, useTheme, Progress, Button, Input } from 'tamagui';
 
 import { IDBook } from '@/interfaces/api/bookidApiResult';
 import { supabase } from '@/services/clients/supabase';
 import useBooksStore from '@/store/booksStore';
+import useProgressStore from '@/store/progressStore';
 
 interface BookProgressProps {
   book: IDBook;
-  setBooks: (books: IDBook[]) => void;
 }
 
 // interface PageInfoType {
@@ -20,11 +20,12 @@ interface BookProgressProps {
 //   pages_read: string;
 // }
 
-const BookProgress = ({ book, setBooks }: BookProgressProps) => {
+const BookProgress = ({ book }: BookProgressProps) => {
   const [pages, setPages] = useState('');
   const [pagesRead, setPagesRead] = useState('');
   const [defaultColor, setDefaultColor] = useState<boolean>();
-  const { bookIdsPage, setBookIdsPage, books } = useBooksStore();
+  const { bookIdsPage, setBookIdsPage, books, setBooks } = useBooksStore();
+  const { dailyPagesRead, setDailyPagesRead } = useProgressStore();
 
   const theme = useTheme() as {
     complementaryColorTwo: string;
@@ -80,24 +81,28 @@ const BookProgress = ({ book, setBooks }: BookProgressProps) => {
   };
 
   useEffect(() => {
-    console.log('books', bookIdsPage);
-    updatePagesRead();
-  }, [pagesRead]);
-
-  useEffect(() => {
     getPageInfo();
   }, []);
 
   useEffect(() => {
-    console.log(book.volumeInfo.imageLinks.smallThumbnail);
-  }, [book.volumeInfo.imageLinks.smallThumbnail]);
+    console.log('books', bookIdsPage);
+    if (pagesRead !== null || '') {
+      updatePagesRead();
+    }
+  }, [pagesRead]);
+
+  useEffect(() => {
+    console.log('🚀 ~ BookProgress ~ book:', book.volumeInfo.imageLinks);
+  }, [book]);
 
   return (
     <View flexDirection="row" marginVertical={20}>
       {book.volumeInfo.imageLinks ? (
-        <FastImage
+        <Image
           source={{
-            uri: book.volumeInfo.imageLinks.smallThumbnail,
+            uri: 'https' + book.volumeInfo.imageLinks.thumbnail.substr(4),
+            width: 65,
+            height: 90,
           }}
           style={{ borderRadius: 5, width: 65, height: 90 }}
         />
@@ -175,25 +180,51 @@ const BookProgress = ({ book, setBooks }: BookProgressProps) => {
                 />
               </Progress>
             )}
-            <View flexDirection="row" mt={5} justifyContent="center" alignItems="center">
-              <Button onPress={() => setPagesRead((parseInt(pagesRead, 10) + 1).toString())}>
-                <Feather name="plus" size={23} color="#ABABAB" />
-              </Button>
-              <Input
-                textAlign="center"
-                h={30}
-                borderColor="#ABABAB"
-                value={pagesRead}
-                onChangeText={(text) => setPagesRead(text)}
-              />
-              <Button onPress={() => setPagesRead((parseInt(pagesRead, 10) - 1).toString())}>
-                <Feather name="minus" size={23} color="#ABABAB" />
-              </Button>
-            </View>
           </View>
         ) : (
           <View h={25} w="100%" />
         )}
+        <View flexDirection="row" mt={5} justifyContent="center" alignItems="center">
+          <Button
+            onPress={() => {
+              setPagesRead((parseInt(pagesRead, 10) + 1).toString());
+              if (pagesRead !== pages) {
+                setDailyPagesRead(Math.min(100, dailyPagesRead + 1));
+              }
+            }}>
+            <Feather name="plus" size={23} color="#ABABAB" />
+          </Button>
+          <Input
+            textAlign="center"
+            h={30}
+            borderColor="#ABABAB"
+            value={pagesRead}
+            onChangeText={(text) => {
+              if (text === null || text === '') {
+                console.log('her222222e');
+                return;
+              }
+              console.log('🚀 ~ BookProgress ~ text:', text);
+
+              const parsedText = parseInt(text, 10);
+              const parsedPagesRead = parseInt(pagesRead, 10);
+              const difference = parsedText - parsedPagesRead;
+              if (pagesRead !== pages && pagesRead !== '0') {
+                setDailyPagesRead(Math.max(0, Math.min(100, dailyPagesRead + difference)));
+              }
+              setPagesRead(text);
+            }}
+          />
+          <Button
+            onPress={() => {
+              setPagesRead((parseInt(pagesRead, 10) - 1).toString());
+              if (pagesRead !== '0') {
+                setDailyPagesRead(Math.max(0, dailyPagesRead - 1));
+              }
+            }}>
+            <Feather name="minus" size={23} color="#ABABAB" />
+          </Button>
+        </View>
       </View>
     </View>
   );

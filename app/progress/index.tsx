@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
+import { KeyboardAvoidingView, Platform } from 'react-native';
 import { View, Text, useTheme, Separator, ScrollView, Button, Spinner } from 'tamagui';
 
 import BookProgress from '@/components/bookProgress';
@@ -18,8 +18,13 @@ const Page = () => {
   const [isNew, setIsNew] = useState<boolean>();
   const [dailyPages, setDailyPages] = useState<number>(0);
   const [goalsLoading, setGoalsLoading] = useState<boolean>();
-  const { dailyPagesRead, readingGoals } = useProgressStore();
-  const { books } = useBooksStore();
+  const [goalMessage, setGoalMessage] = useState("Don't Give up!");
+  const [goalPrimaryColor, setGoalPrimaryColor] = useState('#2895bd');
+  const [goalSecondaryColor, setGoalSecondaryColor] = useState('#1B637D');
+  const { dailyPagesRead, readingGoals, setReadingGoals, completed } = useProgressStore();
+  const { books, bookIdsPage } = useBooksStore();
+
+  const navigation = useNavigation();
 
   const theme = useTheme() as {
     complementaryColorTwo: string;
@@ -43,6 +48,10 @@ const Page = () => {
       const { data, error } = await supabase.from('user_goals').select().eq('user_id', User?.id);
       if (data?.length !== 0) {
         setIsNew(false);
+        if (data) {
+          console.log('🚀 ~ getReadingGoals ~ data:', data);
+          setReadingGoals(parseInt(data[0].page_goal, 10));
+        }
       } else {
         console.log('🚀 ~ getReadingGoals ~ error:', error);
         setIsNew(true);
@@ -51,11 +60,29 @@ const Page = () => {
     }
   };
 
-  const saveDailyPages = async () => {
-    try {
-      await AsyncStorage.setItem('@dailyPagesRead', dailyPages.toString());
-    } catch (e) {
-      console.error('🚀 ~ saveDailyPages ~ e:', e);
+  const enterGoalMessage = () => {
+    const percentageValue = Math.floor((dailyPagesRead / readingGoals) * 100);
+    console.log(percentageValue);
+    if (percentageValue > 0 && percentageValue <= 25) {
+      setGoalMessage("Don't give up!");
+      setGoalPrimaryColor('#2895bd');
+      setGoalSecondaryColor('#144A5E');
+    } else if (percentageValue > 25 && percentageValue <= 50) {
+      setGoalMessage('You can do it!');
+      setGoalPrimaryColor('#17C3B2');
+      setGoalSecondaryColor('#0E756B');
+    } else if (percentageValue > 50 && percentageValue <= 75) {
+      setGoalMessage('Almost there!');
+      setGoalPrimaryColor('#FE6D73');
+      setGoalSecondaryColor('#984145');
+    } else if (percentageValue > 75 && percentageValue < 100) {
+      setGoalMessage('You are so close!');
+      setGoalPrimaryColor('#D3C1C3');
+      setGoalSecondaryColor('#7F7475');
+    } else if (percentageValue >= 100) {
+      setGoalMessage('You have completed your daily streak!');
+      setGoalPrimaryColor('#FFE86B');
+      setGoalSecondaryColor('#998B40');
     }
   };
 
@@ -65,11 +92,41 @@ const Page = () => {
   };
 
   useEffect(() => {
-    if (dailyPages < 0) {
-      setDailyPages(0);
-    }
-    saveDailyPages();
-  }, [dailyPages]);
+    setDailyPages(dailyPagesRead);
+    enterGoalMessage();
+  }, [dailyPagesRead]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', async () => {
+      const {
+        data: { user: User },
+      } = await supabase.auth.getUser();
+
+      const { data, error } = await supabase.from('user_books').select();
+      if (error) {
+        // Error handling
+        console.log(error);
+        return;
+      }
+
+      if (User) {
+        for await (const IdsPage of bookIdsPage) {
+          for (let i = 0; i < data.length; i++) {
+            if (data[i].pages_read !== IdsPage.pagesRead.toString()) {
+              await supabase
+                .from('user_books')
+                .update({ pages_read: IdsPage.pagesRead.toString() })
+                .eq('user_id', User.id)
+                .eq('bookid', IdsPage.id);
+            }
+          }
+          console.log('update complete!');
+        }
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   useEffect(() => {
     setDailyPages(dailyPagesRead);
@@ -80,6 +137,10 @@ const Page = () => {
   useEffect(() => {
     console.log('isNew', isNew);
   }, [isNew]);
+
+  useEffect(() => {
+    setDisplayBooks(books);
+  }, [books]);
 
   return (
     <View paddingHorizontal={20} paddingTop={72} flex={1}>
@@ -146,15 +207,23 @@ const Page = () => {
               w="100%"
               padding={10}
               borderRadius={5}
-              backgroundColor="#FFE86B"
+              backgroundColor={goalPrimaryColor}
               flexDirection="row"
               justifyContent="space-around"
               alignItems="center">
-              <Ionicons name="sparkles-sharp" size={24} color="#866E0D" />
-              <Text textAlign="center" color="#866E0D" fontSize={12} fontWeight={600}>
-                You have completed your daily streak!
+              {completed ? (
+                <Ionicons name="sparkles-sharp" size={24} color={goalSecondaryColor} />
+              ) : (
+                <View w={1} h={24} />
+              )}
+              <Text textAlign="center" color={goalSecondaryColor} fontSize={12} fontWeight={600}>
+                {goalMessage}
               </Text>
-              <Ionicons name="sparkles-sharp" size={24} color="#866E0D" />
+              {completed ? (
+                <Ionicons name="sparkles-sharp" size={24} color={goalSecondaryColor} />
+              ) : (
+                <View w={1} h={24} />
+              )}
             </View>
           </View>
         )
@@ -164,12 +233,13 @@ const Page = () => {
       <Text color="#1F0418" fontSize={12} fontWeight={500}>
         In progress
       </Text>
-      <ScrollView>
-        {displayBooks &&
-          displayBooks.map((item) => (
-            <BookProgress key={item.id} book={item} setBooks={setDisplayBooks} />
-          ))}
-      </ScrollView>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}>
+        <ScrollView>
+          {displayBooks && displayBooks.map((item) => <BookProgress key={item.id} book={item} />)}
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 };

@@ -1,6 +1,6 @@
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text, useTheme, Input, Button, Checkbox, Spinner } from 'tamagui';
@@ -8,12 +8,16 @@ import { View, Text, useTheme, Input, Button, Checkbox, Spinner } from 'tamagui'
 import { AppleAuth } from '@/components/auth/appleAuth';
 import GoogleAuth from '@/components/auth/googleAuth';
 import { supabase } from '@/services/clients/supabase';
+import useBooksStore from '@/store/booksStore';
+import useProgressStore from '@/store/progressStore';
 
 const Page = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [passwordIcon, setPasswordIcon] = useState(true);
+  const { setBooks, setBookIdsPage, setSelectedBooks } = useBooksStore();
+  const { setDailyPagesRead, setReadingGoals } = useProgressStore();
 
   const theme = useTheme() as {
     primaryColor: string;
@@ -40,6 +44,14 @@ const Page = () => {
 
     setLoading(false);
   };
+
+  // useEffect(() => {
+  //   setDailyPagesRead(0);
+  //   setBookIdsPage([]);
+  //   setBooks([]);
+  //   setSelectedBooks([]);
+  //   setReadingGoals(0);
+  // }, []);
 
   return (
     <SafeAreaView style={{ flex: 1, paddingHorizontal: 20 }}>

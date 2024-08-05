@@ -16,6 +16,13 @@
           "iosUrlScheme": "com.googleusercontent.apps.518168536052-p0cm7jblij9hpkaq2lqqbaoi4hlamrrk"
         }
       ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "organization": "readingrocket",
+          "project": "readingrocket"
+        }
+      ],
       "expo-router",
       "expo-apple-authentication"
     ],

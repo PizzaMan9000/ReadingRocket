@@ -1,16 +1,19 @@
 import { Feather } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { memo, useEffect, useState } from 'react';
 import { Image } from 'react-native';
 import { View, Text, useTheme, Progress } from 'tamagui';
 
 import { supabase } from '@/services/clients/supabase';
 import useProgressStore from '@/store/progressStore';
+import useStreakStore from '@/store/streakStore';
 
 const PageDisplay = () => {
-  const [fetchedReadingGoals, setFetchedReadingGoals] = useState<string>();
+  const [fetchedReadingGoals, setFetchedReadingGoals] = useState<string>('');
   const [streak, setStreak] = useState<number>();
-  const { readingGoals } = useProgressStore();
+  const [readingGoalPercentage, setReadingGoalPercentage] = useState('');
+  const { readingGoals, dailyPagesRead, completed, setCompleted, setReadingGoals } =
+    useProgressStore();
+  const { streakDaysCount } = useStreakStore();
 
   const theme = useTheme() as {
     complementaryColorTwo: string;
@@ -22,16 +25,21 @@ const PageDisplay = () => {
 
   const getReadingGoals = async () => {
     try {
-      if (fetchedReadingGoals) {
+      if (readingGoals) {
+        console.log('IYVDOJWIPWJP');
         setFetchedReadingGoals(readingGoals.toString());
       } else {
         const {
           data: { user: User },
         } = await supabase.auth.getUser();
 
+        console.log('IYVDOJWIPWJeeeeeeeeeP');
+
         const { data, error } = await supabase.from('user_goals').select().eq('user_id', User?.id);
         if (data) {
           setFetchedReadingGoals(data[0].page_goal);
+          setReadingGoals(parseInt(data[0].page_goal, 10));
+          console.log('SETTING READING GOALS', readingGoals);
         } else {
           console.log('🚀 ~ getReadingGoals ~ error:', error);
         }
@@ -41,25 +49,41 @@ const PageDisplay = () => {
     }
   };
 
-  const getStreak = async () => {
-    try {
-      const rawStreakCount = await AsyncStorage.getItem('@streakDaysCount');
-      if (rawStreakCount) {
-        const streakCount = parseInt(rawStreakCount, 10);
-        setStreak(streakCount);
-      } else {
-        console.log('manually set streak');
-        setStreak(0);
-      }
-    } catch (e) {
-      throw new Error(`🚀 ~ getStreak ~ e: ${e}`);
-    }
-  };
-
   useEffect(() => {
     getReadingGoals();
-    getStreak();
+    if (streakDaysCount !== null) {
+      setStreak(streakDaysCount);
+    }
   }, []);
+
+  useEffect(() => {
+    if (dailyPagesRead.toString() === fetchedReadingGoals) {
+      setCompleted(true);
+    } else {
+      setCompleted(false);
+    }
+    console.log('hello9');
+
+    if (dailyPagesRead > parseInt(fetchedReadingGoals, 10)) {
+      setReadingGoalPercentage('100');
+    } else {
+      setReadingGoalPercentage(
+        Math.floor((dailyPagesRead / parseInt(fetchedReadingGoals, 10)) * 100).toString()
+      );
+      console.log('HHSJJAJA', readingGoalPercentage);
+    }
+  }, [dailyPagesRead]);
+
+  useEffect(() => {
+    if (dailyPagesRead > parseInt(fetchedReadingGoals, 10)) {
+      setReadingGoalPercentage('100');
+    } else {
+      setReadingGoalPercentage(
+        Math.floor((dailyPagesRead / parseInt(fetchedReadingGoals, 10)) * 100).toString()
+      );
+      console.log('HHSJJAJA', readingGoalPercentage);
+    }
+  }, [dailyPagesRead, fetchedReadingGoals]);
 
   return (
     <View>
@@ -101,41 +125,64 @@ const PageDisplay = () => {
             </Text>
           )}
         </View>
-        <View
-          w={58}
-          h={24}
-          alignItems="center"
-          justifyContent="center"
-          backgroundColor={theme.complementaryColor}
-          borderRadius={5}>
-          <Text color={theme.primaryColor} fontSize={10} fontWeight={600} lineHeight={24}>
-            Ongoing
-          </Text>
-        </View>
+        {completed ? (
+          <View
+            w={58}
+            h={24}
+            alignItems="center"
+            justifyContent="center"
+            backgroundColor="#77DD77"
+            borderRadius={5}
+            paddingHorizontal={5}>
+            <Text color="#06402B" fontSize={10} fontWeight={600} lineHeight={24}>
+              Completed
+            </Text>
+          </View>
+        ) : (
+          <View
+            w={58}
+            h={24}
+            alignItems="center"
+            justifyContent="center"
+            backgroundColor={theme.complementaryColor}
+            borderRadius={5}>
+            <Text color={theme.primaryColor} fontSize={10} fontWeight={600} lineHeight={24}>
+              Ongoing
+            </Text>
+          </View>
+        )}
       </View>
       <View mt={14}>
         <View flexDirection="row">
           {fetchedReadingGoals ? (
             <Text color="#ABABAB" fontSize={10} fontWeight={400} flex={1}>
-              6/{fetchedReadingGoals} pages
+              {dailyPagesRead}/{fetchedReadingGoals} pages
             </Text>
           ) : (
             <Text color="#ABABAB" fontSize={10} fontWeight={400} flex={1}>
-              6/10 pages
+              {dailyPagesRead}/10 pages
             </Text>
           )}
-          <Text color={theme.primaryColor} fontSize={12} fontWeight={600}>
-            60%
-          </Text>
+          {fetchedReadingGoals && (
+            <Text color={theme.primaryColor} fontSize={12} fontWeight={600}>
+              {readingGoalPercentage}%
+            </Text>
+          )}
         </View>
-        <Progress size="$3" backgroundColor={theme.complementaryColorTwo} value={50} mt={2}>
-          <Progress.Indicator
-            backgroundColor={theme.primaryColor}
-            animation="bouncy"
-            borderTopRightRadius={100}
-            borderBottomRightRadius={100}
-          />
-        </Progress>
+        {fetchedReadingGoals && (
+          <Progress
+            size="$3"
+            backgroundColor={theme.complementaryColorTwo}
+            value={parseInt(readingGoalPercentage, 10)}
+            mt={2}>
+            <Progress.Indicator
+              backgroundColor={theme.primaryColor}
+              animation="bouncy"
+              borderTopRightRadius={100}
+              borderBottomRightRadius={100}
+            />
+          </Progress>
+        )}
       </View>
     </View>
   );

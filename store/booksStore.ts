@@ -5,7 +5,7 @@ import { IDBook } from '@/interfaces/api/bookidApiResult';
 import { dataSaved } from '@/interfaces/app/forumInterface';
 import { zustandStorage } from '@/services/clients/mmkv';
 
-interface BookIdsPageProps {
+export interface BookIdsPageProps {
   id: string;
   pageCount: number | undefined;
   pagesRead: number;
@@ -39,10 +39,14 @@ const useBooksStore = create<BooksState>()(
         });
       },
       bookIdsPage: [],
-      setBookIdsPage: (bookIdsPage: BookIdsPageProps[]) =>
-        set((state) => ({ ...state, bookIdsPage })),
+      setBookIdsPage: (bookIdsPage: BookIdsPageProps[]) => set(() => ({ bookIdsPage })),
       books: [],
-      setBooks: (books: IDBook[]) => set((state) => ({ ...state, books })),
+      setBooks: (books: IDBook[]) =>
+        set((state) => {
+          console.log('SET BOOKS ZUSTAND (BOOKS)', books);
+          console.log('SET BOOKS ZUSTAND (STATE)', state.books);
+          return { ...state, books };
+        }),
     }),
     {
       name: 'app-storage',
