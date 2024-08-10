@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { ImageBackground, Linking, TouchableOpacity } from 'react-native';
 import { View, Text, Image, useTheme, Spinner, ScrollView } from 'tamagui';
 
+import HomeBookCard from '@/components/homeBookCard';
 import NotificationButton from '@/components/notificationButton';
 import PageDisplay from '@/components/pageDisplay';
 import { IDBook } from '@/interfaces/api/bookidApiResult';
@@ -43,8 +44,8 @@ const Page = () => {
   const router = useRouter();
 
   const imageQuery = useQuery({
-    queryKey: ['image', 'calming'],
-    queryFn: () => getImageSearchResults('calming'),
+    queryKey: ['image', 'scenery'],
+    queryFn: () => getImageSearchResults('scenery'),
     enabled: enableImageQuery,
   });
 
@@ -177,6 +178,7 @@ const Page = () => {
       }
     }
   }, [imageQuery.data]);
+
   useEffect(() => {
     if (books.length === 0) {
       getBooksData();
@@ -311,6 +313,24 @@ const Page = () => {
           )}
           <PageDisplay />
         </TouchableOpacity>
+        <View mt={36}>
+          <View flexDirection="row">
+            <Text
+              color={theme.secondaryColorTwo}
+              fontSize={12}
+              fontWeight={500}
+              lineHeight={16}
+              flex={1}>
+              Currently Reading
+            </Text>
+            <Text color={theme.primaryColor} fontSize={10} fontWeight={400} lineHeight={16}>
+              See all
+            </Text>
+          </View>
+          <ScrollView mt={16} horizontal>
+            {sliceTrigger && books.map((item) => <HomeBookCard key={item.id} book={item} />)}
+          </ScrollView>
+        </View>
       </ScrollView>
     </View>
   );

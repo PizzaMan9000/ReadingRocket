@@ -1,3 +1,9 @@
+import notifee, {
+  AuthorizationStatus,
+  TriggerType,
+  RepeatFrequency,
+  AndroidImportance,
+} from '@notifee/react-native';
 import * as Sentry from '@sentry/react-native';
 import { Session } from '@supabase/supabase-js';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -10,6 +16,7 @@ import { TamaguiProvider, Theme } from 'tamagui';
 import { queryClient } from '@/services/clients/queryClient';
 import { supabase } from '@/services/clients/supabase';
 import useBooksStore from '@/store/booksStore';
+import useGlobalStore from '@/store/globalStore';
 import useProgressStore from '@/store/progressStore';
 import useStreakStore from '@/store/streakStore';
 import config from '@/tamagui.config';
@@ -25,6 +32,8 @@ const InitalLayout = () => {
   const { bookIdsPage } = useBooksStore();
   const { setDailyPagesRead, readingGoals } = useProgressStore();
   const { setStreakDaysCount, userJoinDay, setUserJoinDay, streakDaysCount } = useStreakStore();
+  const { notificationsOn } = useGlobalStore();
+  const [appState, setAppState] = useState(AppState.currentState);
 
   const segments = useSegments();
   const router = useRouter();
@@ -34,7 +43,60 @@ const InitalLayout = () => {
     InterBold: require('@tamagui/font-inter/otf/Inter-Bold.otf'),
   });
 
-  const [appState, setAppState] = useState(AppState.currentState);
+  useEffect(() => {
+    // setBooks([]);
+
+    async function setupNotifications() {
+      // Request permissions first
+      const settings = await notifee.requestPermission();
+
+      if (settings.authorizationStatus >= AuthorizationStatus.AUTHORIZED) {
+        // Schedule the daily notification
+        await scheduleDailyNotification();
+      } else {
+        console.log('User declined notification permissions');
+      }
+    }
+
+    setupNotifications(); // Call the async function to set up notifications
+  }, []); // Empty dependency array means this effect runs once on mount
+
+  async function scheduleDailyNotification() {
+    if (notificationsOn === false) {
+      return;
+    }
+
+    await notifee.createChannel({
+      id: 'daily-reminder',
+      name: 'Daily Reminder',
+      importance: AndroidImportance.HIGH,
+    });
+
+    const date = new Date();
+    date.setHours(8);
+    date.setMinutes(0);
+    date.setSeconds(0);
+
+    // If the time has already passed today, set it for tomorrow
+    if (date.getTime() <= Date.now()) {
+      date.setDate(date.getDate() + 1);
+    }
+
+    await notifee.createTriggerNotification(
+      {
+        title: 'Daily Reminder',
+        body: 'Don’t forget to check out today’s updates!',
+        android: {
+          channelId: 'daily-reminder',
+        },
+      },
+      {
+        type: TriggerType.TIMESTAMP,
+        timestamp: date.getTime(), // set the notification time
+        repeatFrequency: RepeatFrequency.DAILY, // repeat daily
+      }
+    );
+  }
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {
