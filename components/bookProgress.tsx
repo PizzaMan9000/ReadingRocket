@@ -1,7 +1,7 @@
-import { Feather, FontAwesome, Ionicons } from '@expo/vector-icons';
+import { Entypo, Feather, FontAwesome, Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { Image } from 'react-native';
-import { View, Text, useTheme, Progress, Button, Input } from 'tamagui';
+import { View, Text, useTheme, Progress, Button, Input, Popover, Dialog } from 'tamagui';
 
 import { IDBook } from '@/interfaces/api/bookidApiResult';
 import { supabase } from '@/services/clients/supabase';
@@ -126,9 +126,81 @@ const BookProgress = ({ book }: BookProgressProps) => {
           <Text numberOfLines={1} fontWeight={500} flex={1} color="#1F0318" fontSize={11}>
             {book.volumeInfo.title}
           </Text>
-          <Button p={0} onPress={() => deleteBook()} position="absolute" ml={280}>
-            <FontAwesome name="trash-o" size={24} color="#FF0000" />
-          </Button>
+          <Popover size="$5" allowFlip>
+            <Popover.Trigger asChild>
+              <Button p={0} position="absolute" ml={280}>
+                <Entypo name="dots-three-horizontal" size={24} color="#838383" />
+              </Button>
+            </Popover.Trigger>
+            <Popover.Content
+              borderWidth={0}
+              enterStyle={{ y: -10, opacity: 0 }}
+              exitStyle={{ y: -10, opacity: 0 }}
+              elevate
+              paddingVertical={4}
+              paddingHorizontal={12}
+              animation={[
+                'quick',
+                {
+                  opacity: {
+                    overshootClamping: true,
+                  },
+                },
+              ]}
+              backgroundColor="#FFFFFF">
+              <Popover.Arrow borderWidth={0} backgroundColor="#ffffff" />
+              <Dialog modal>
+                <Dialog.Trigger asChild>
+                  <Button p={0} flexDirection="row" alignItems="center">
+                    <Text fontSize={13} color="#FF0000" mr={10}>
+                      Delete
+                    </Text>
+                    <FontAwesome name="trash-o" size={24} color="#FF0000" />
+                  </Button>
+                </Dialog.Trigger>
+                <Dialog.Portal>
+                  <Dialog.Overlay
+                    key="overlay"
+                    animation="lazy"
+                    opacity={0.5}
+                    enterStyle={{ opacity: 0 }}
+                    exitStyle={{ opacity: 0 }}
+                  />
+                  <Dialog.Content
+                    bordered
+                    elevate
+                    key="content"
+                    animateOnly={['transform', 'opacity']}
+                    animation={[
+                      'quick',
+                      {
+                        opacity: {
+                          overshootClamping: true,
+                        },
+                      },
+                    ]}
+                    enterStyle={{ x: 0, y: -20, opacity: 0, scale: 0.9 }}
+                    exitStyle={{ x: 0, y: 10, opacity: 0, scale: 0.95 }}
+                    gap="$4"
+                    borderWidth={0}
+                    backgroundColor="#FFFFFF">
+                    <Text fontSize={13} color={theme.primaryColor} fontWeight={500}>
+                      Are you sure you want to delete this book?
+                    </Text>
+                    <Text alignSelf="center" fontSize={11} color="#ABABAB">
+                      Deleting this book will be permenant
+                    </Text>
+                    <View flexDirection="row" justifyContent="center">
+                      <Dialog.Close asChild>
+                        <Button>Cancel</Button>
+                      </Dialog.Close>
+                      <Button onPress={() => deleteBook()}>Delete</Button>
+                    </View>
+                  </Dialog.Content>
+                </Dialog.Portal>
+              </Dialog>
+            </Popover.Content>
+          </Popover>
         </View>
         {book.volumeInfo.authors ? (
           <Text numberOfLines={1} color={theme.primaryColor} fontSize={10} fontWeight={500}>
