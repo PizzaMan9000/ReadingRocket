@@ -1,21 +1,27 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { TouchableOpacity, Image } from 'react-native';
 import { View, Text, useTheme } from 'tamagui';
 
 import { IDBook } from '@/interfaces/api/bookidApiResult';
+import useGlobalStore from '@/store/globalStore';
 
 type HomeBookCardProps = {
   book: IDBook;
 };
 
 const HomeBookCard = ({ book }: HomeBookCardProps) => {
+  const { setSelectedBook } = useGlobalStore();
+
   const theme = useTheme() as {
     primaryColor: string;
     secondaryColorOne: string;
     secondaryColorTwo: string;
     complementaryColor: string;
   };
+
+  const router = useRouter();
 
   return (
     <TouchableOpacity
@@ -26,6 +32,10 @@ const HomeBookCard = ({ book }: HomeBookCardProps) => {
         margin: 4,
         paddingVertical: 10,
         paddingHorizontal: 5,
+      }}
+      onPress={() => {
+        setSelectedBook(book);
+        router.push(`/viewBook`);
       }}>
       {book.volumeInfo.imageLinks ? (
         <Image

@@ -29,7 +29,7 @@ Sentry.init({
 const InitalLayout = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [initialized, setInitialized] = useState(false);
-  const { bookIdsPage } = useBooksStore();
+  const { bookIdsPage, setBooks } = useBooksStore();
   const { setDailyPagesRead, readingGoals } = useProgressStore();
   const { setStreakDaysCount, userJoinDay, setUserJoinDay, streakDaysCount } = useStreakStore();
   const { notificationsOn } = useGlobalStore();

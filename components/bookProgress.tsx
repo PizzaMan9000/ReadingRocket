@@ -1,7 +1,7 @@
-import { Entypo, Feather, FontAwesome, Ionicons } from '@expo/vector-icons';
+import { AntDesign, Entypo, Feather, FontAwesome, Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { Image } from 'react-native';
-import { View, Text, useTheme, Progress, Button, Input, Popover, Dialog } from 'tamagui';
+import { Alert, Image, Keyboard, Modal } from 'react-native';
+import { View, Text, useTheme, Progress, Button, Input, Popover, Separator } from 'tamagui';
 
 import { IDBook } from '@/interfaces/api/bookidApiResult';
 import { supabase } from '@/services/clients/supabase';
@@ -22,7 +22,11 @@ interface BookProgressProps {
 
 const BookProgress = ({ book }: BookProgressProps) => {
   const [pages, setPages] = useState('');
+  const [newPages, setNewPages] = useState('');
   const [pagesRead, setPagesRead] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [isPopoverVisible, setIsPopoverVisible] = useState(false);
+  const [changePagesToggle, setChangePagesToggle] = useState(false);
   const [defaultColor, setDefaultColor] = useState<boolean>();
   const { bookIdsPage, setBookIdsPage, books, setBooks } = useBooksStore();
   const { dailyPagesRead, setDailyPagesRead } = useProgressStore();
@@ -80,6 +84,49 @@ const BookProgress = ({ book }: BookProgressProps) => {
     }
   };
 
+  const updatePages = async () => {
+    const { error } = await supabase
+      .from('user_books')
+      .update({ amount_of_pages: pages })
+      .eq('bookid', book.id);
+
+    if (error) {
+      console.log('🚀 ~ updatePages ~ error:', error);
+    }
+  };
+
+  const handlePagesSetSubmit = () => {
+    setChangePagesToggle(false);
+    Keyboard.dismiss();
+  };
+
+  // useEffect(() => {
+  //   const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+  //     if (changePagesToggle === true) {
+  //       setChangePagesToggle(false);
+  //       setLoadingToggle(true);
+  //       updatePages();
+  //     }
+  //     console.log("HELLOOOAOAOAO");
+  //   });
+
+  //   return () => {
+  //     keyboardDidHideListener.remove();
+  //   };
+  // }, []);
+
+  useEffect(() => {
+    // Listener for keyboard dismiss event
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      setChangePagesToggle(false);
+    });
+
+    return () => {
+      // Clean up the listener when the component unmounts
+      keyboardDidHideListener.remove();
+    };
+  }, []);
+
   useEffect(() => {
     getPageInfo();
   }, []);
@@ -90,6 +137,28 @@ const BookProgress = ({ book }: BookProgressProps) => {
       updatePagesRead();
     }
   }, [pagesRead]);
+
+  useEffect(() => {
+    if (newPages == null || newPages === '') {
+      return;
+    }
+    let parsedPages = parseInt(newPages, 10);
+    if (parsedPages < parseInt(pagesRead, 10)) {
+      parsedPages = parseInt(pages, 10) + 1;
+    }
+
+    const newBookIdsPages = bookIdsPage;
+    for (let i = 0; i < newBookIdsPages.length; i++) {
+      if (newBookIdsPages[i].id === book.id) {
+        newBookIdsPages[i].pageCount = parsedPages;
+        setBookIdsPage(newBookIdsPages);
+
+        setPages((bookIdsPage[i].pageCount ?? 0).toString());
+        setPagesRead(bookIdsPage[i].pagesRead.toString());
+        updatePages();
+      }
+    }
+  }, [newPages]);
 
   useEffect(() => {
     console.log('🚀 ~ BookProgress ~ book:', book.volumeInfo.imageLinks);
@@ -126,9 +195,15 @@ const BookProgress = ({ book }: BookProgressProps) => {
           <Text numberOfLines={1} fontWeight={500} flex={1} color="#1F0318" fontSize={11}>
             {book.volumeInfo.title}
           </Text>
-          <Popover size="$5" allowFlip>
+          <Popover
+            size="$5"
+            allowFlip
+            open={isPopoverVisible}
+            onOpenChange={setIsPopoverVisible}
+            placement="left"
+            strategy="fixed">
             <Popover.Trigger asChild>
-              <Button p={0} position="absolute" ml={280}>
+              <Button p={0} position="absolute" ml={280} onPress={() => setIsPopoverVisible(true)}>
                 <Entypo name="dots-three-horizontal" size={24} color="#838383" />
               </Button>
             </Popover.Trigger>
@@ -149,56 +224,79 @@ const BookProgress = ({ book }: BookProgressProps) => {
               ]}
               backgroundColor="#FFFFFF">
               <Popover.Arrow borderWidth={0} backgroundColor="#ffffff" />
-              <Dialog modal>
-                <Dialog.Trigger asChild>
-                  <Button p={0} flexDirection="row" alignItems="center">
-                    <Text fontSize={13} color="#FF0000" mr={10}>
-                      Delete
-                    </Text>
-                    <FontAwesome name="trash-o" size={24} color="#FF0000" />
-                  </Button>
-                </Dialog.Trigger>
-                <Dialog.Portal>
-                  <Dialog.Overlay
-                    key="overlay"
-                    animation="lazy"
-                    opacity={0.5}
-                    enterStyle={{ opacity: 0 }}
-                    exitStyle={{ opacity: 0 }}
-                  />
-                  <Dialog.Content
-                    bordered
-                    elevate
-                    key="content"
-                    animateOnly={['transform', 'opacity']}
-                    animation={[
-                      'quick',
-                      {
-                        opacity: {
-                          overshootClamping: true,
-                        },
-                      },
-                    ]}
-                    enterStyle={{ x: 0, y: -20, opacity: 0, scale: 0.9 }}
-                    exitStyle={{ x: 0, y: 10, opacity: 0, scale: 0.95 }}
-                    gap="$4"
-                    borderWidth={0}
-                    backgroundColor="#FFFFFF">
-                    <Text fontSize={13} color={theme.primaryColor} fontWeight={500}>
-                      Are you sure you want to delete this book?
-                    </Text>
-                    <Text alignSelf="center" fontSize={11} color="#ABABAB">
-                      Deleting this book will be permenant
-                    </Text>
-                    <View flexDirection="row" justifyContent="center">
-                      <Dialog.Close asChild>
-                        <Button>Cancel</Button>
-                      </Dialog.Close>
-                      <Button onPress={() => deleteBook()}>Delete</Button>
+              <Button
+                p={0}
+                flexDirection="row"
+                onPress={() => {
+                  setChangePagesToggle(!changePagesToggle);
+                  setIsPopoverVisible(false);
+                }}>
+                <Text fontSize={13} color="#ABABAB" mr={10}>
+                  Change amount of pages
+                </Text>
+                <AntDesign name="book" size={24} color="#ABABAB" />
+              </Button>
+              <Modal
+                animationType="fade"
+                transparent
+                visible={modalVisible}
+                onRequestClose={() => {
+                  Alert.alert('Modal has been closed.');
+                  setModalVisible(!modalVisible);
+                }}>
+                <View
+                  flex={1}
+                  alignItems="center"
+                  justifyContent="center"
+                  backgroundColor="rgba(0,0,0, 0.4)">
+                  <View
+                    backgroundColor="#ffffff"
+                    width={350}
+                    h={200}
+                    alignItems="center"
+                    borderRadius={5}>
+                    <View mt={50}>
+                      <Text
+                        fontSize={14}
+                        color={theme.primaryColor}
+                        fontWeight={500}
+                        textAlign="center">
+                        Are you sure you want to delete this book?
+                      </Text>
+                      <Text alignSelf="center" fontSize={11} color="#ABABAB">
+                        Deleting this book will be permenant
+                      </Text>
                     </View>
-                  </Dialog.Content>
-                </Dialog.Portal>
-              </Dialog>
+                    <View flexDirection="row" justifyContent="center" mt={35} gap={10}>
+                      <Button
+                        onPress={() => setModalVisible(false)}
+                        backgroundColor={theme.primaryColor}
+                        color="#ffffff">
+                        Cancel
+                      </Button>
+                      <Button
+                        onPress={() => {
+                          setModalVisible(false);
+                          setIsPopoverVisible(false);
+                          deleteBook();
+                        }}
+                        backgroundColor={theme.complementaryColor}
+                        borderWidth={2}
+                        borderColor={theme.primaryColor}
+                        color={theme.primaryColor}>
+                        Delete
+                      </Button>
+                    </View>
+                  </View>
+                </View>
+              </Modal>
+              <Separator borderColor="#ABABAB" h={2} w="100%" />
+              <Button p={0} flexDirection="row" onPress={() => setModalVisible(true)}>
+                <Text fontSize={13} color="#FF0000" mr={10}>
+                  Delete
+                </Text>
+                <FontAwesome name="trash-o" size={24} color="#FF0000" />
+              </Button>
             </Popover.Content>
           </Popover>
         </View>
@@ -212,9 +310,27 @@ const BookProgress = ({ book }: BookProgressProps) => {
         {pages && pagesRead ? (
           <View flexDirection="column">
             <View flexDirection="row">
-              <Text color="#ABABAB" fontSize={10} fontWeight={400} flex={1}>
-                {pagesRead}/{pages} pages
-              </Text>
+              {changePagesToggle ? (
+                <View flexDirection="row" flex={1} alignItems="center">
+                  <Text color="#ABABAB" fontSize={10} fontWeight={400}>
+                    {pagesRead}/
+                  </Text>
+                  <Input
+                    height={20}
+                    borderColor="#ABABAB"
+                    color="#ABABAB"
+                    value={newPages}
+                    onSubmitEditing={handlePagesSetSubmit}
+                    blurOnSubmit={false}
+                    autoFocus
+                    onChangeText={(text) => setNewPages(text)}
+                  />
+                </View>
+              ) : (
+                <Text color="#ABABAB" fontSize={10} fontWeight={400} flex={1}>
+                  {pagesRead}/{pages} pages
+                </Text>
+              )}
               {defaultColor ? (
                 <Text color={theme.primaryColor} fontSize={14} fontWeight={500}>
                   {Math.floor((parseFloat(pagesRead) / parseFloat(pages)) * 100)}%

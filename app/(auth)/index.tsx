@@ -323,9 +323,11 @@ const Page = () => {
               flex={1}>
               Currently Reading
             </Text>
-            <Text color={theme.primaryColor} fontSize={10} fontWeight={400} lineHeight={16}>
-              See all
-            </Text>
+            <TouchableOpacity onPress={() => router.push('/books')}>
+              <Text color={theme.primaryColor} fontSize={10} fontWeight={400} lineHeight={16}>
+                See all
+              </Text>
+            </TouchableOpacity>
           </View>
           <ScrollView mt={16} horizontal>
             {sliceTrigger && books.map((item) => <HomeBookCard key={item.id} book={item} />)}

@@ -16,7 +16,7 @@ export interface VolumeInfo {
   contentVersion: string;
   description: string;
   dimensions: Dimensions;
-  imageLinks: ImageLinks;
+  imageLinks?: ImageLinks;
   industryIdentifiers: Function[][];
   infoLink: string;
   language: string;
